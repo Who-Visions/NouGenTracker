@@ -15,7 +15,7 @@
     "output_tokens": 104141,
     "reasoning": 0
   },
-  "generated_at": "2026-11-03T20:32:14-05:00",
+  "generated_at": "2026-11-04T00:35:36-05:00",
   "generated_by": "claude-cli",
   "invocations": 196,
   "machine": "phoebus",
@@ -35,7 +35,7 @@
       "reasoning": 0
     }
   },
-  "partial": true,
+  "partial": false,
   "provider_stats": {},
   "schema": 3,
   "sketch": [
