@@ -9,22 +9,22 @@
     "reasoning": 0
   },
   "exact": {
-    "cache_creation": 3167340,
-    "cache_read": 85593234,
-    "input_tokens": 95397,
-    "output_tokens": 192703,
+    "cache_creation": 3326672,
+    "cache_read": 87395605,
+    "input_tokens": 95425,
+    "output_tokens": 201507,
     "reasoning": 0
   },
-  "generated_at": "2026-11-04T16:53:09-05:00",
+  "generated_at": "2026-11-04T20:59:13-05:00",
   "generated_by": "claude-cli",
-  "invocations": 528,
+  "invocations": 541,
   "machine": "phoebus",
   "models": {
     "claude-haiku-5-5": {
-      "cache_creation": 1502061,
-      "cache_read": 7118060,
-      "input_tokens": 94749,
-      "output_tokens": 18852,
+      "cache_creation": 1661393,
+      "cache_read": 8920431,
+      "input_tokens": 94777,
+      "output_tokens": 27656,
       "reasoning": 0
     },
     "claude-opus-5-5": {
@@ -79,6 +79,7 @@
     "0a01d940c22f6502",
     "0a23ce7997724871",
     "0a8362f0cdd2c1e1",
+    "0afa659382a2b5dd",
     "0b69fa161ed752dd",
     "0b904fba99759e9a",
     "0c686da223006c41",
@@ -115,8 +116,7 @@
     "1ad7ed7597c9e365",
     "1ba5dda2c5981370",
     "1bd995b9ee2d77f8",
-    "1c004dac6f4a347b",
-    "1cc40e1bce64f3c3"
+    "1c004dac6f4a347b"
   ],
   "sources": {
     "Antigravity (Fallback)": {
@@ -127,18 +127,18 @@
       "reasoning": 0
     },
     "Claude Code": {
-      "cache_creation": 3167340,
-      "cache_read": 85593234,
-      "input_tokens": 95397,
-      "output_tokens": 192703,
+      "cache_creation": 3326672,
+      "cache_read": 87395605,
+      "input_tokens": 95425,
+      "output_tokens": 201507,
       "reasoning": 0
     }
   },
   "totals": {
-    "cache_creation": 3167340,
-    "cache_read": 90421486,
-    "input_tokens": 172713,
-    "output_tokens": 211447,
+    "cache_creation": 3326672,
+    "cache_read": 92223857,
+    "input_tokens": 172741,
+    "output_tokens": 220251,
     "reasoning": 0
   }
 }
