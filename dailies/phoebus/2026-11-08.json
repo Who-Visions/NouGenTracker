@@ -10,65 +10,71 @@
   },
   "exact": {
     "cache_creation": 0,
-    "cache_read": 50237568,
-    "input_tokens": 3225267,
-    "output_tokens": 89510,
-    "reasoning": 185632
+    "cache_read": 63455360,
+    "input_tokens": 3742965,
+    "output_tokens": 108304,
+    "reasoning": 218691
   },
-  "generated_at": "2026-11-08T13:32:38-05:00",
+  "generated_at": "2026-11-08T17:39:06-05:00",
   "generated_by": "claude-cli",
-  "invocations": 447,
+  "invocations": 555,
   "machine": "phoebus",
   "models": {
     "gpt-6-luna": {
       "cache_creation": 0,
-      "cache_read": 50237568,
-      "input_tokens": 3225267,
-      "output_tokens": 89510,
-      "reasoning": 185632
+      "cache_read": 63455360,
+      "input_tokens": 3742965,
+      "output_tokens": 108304,
+      "reasoning": 218691
     }
   },
   "partial": true,
   "provider_stats": {
     "OpenAI Codex": {
-      "cache_hit_ratio": 0.9397,
+      "cache_hit_ratio": 0.9443,
       "distinct_sessions": 7,
-      "peak_context_used_percent": 80.41,
+      "peak_context_used_percent": 80.78,
       "plan_types": [
         "plus"
       ],
       "rate_limits": {
         "primary": {
-          "latest_used_percent": 1.0,
+          "latest_used_percent": 2.0,
           "peak_used_percent": 12.0,
-          "resets_at": 1794172113,
+          "resets_at": 1794190163,
           "window_minutes": 300
         },
         "secondary": {
-          "latest_used_percent": 10.0,
-          "peak_used_percent": 10.0,
+          "latest_used_percent": 11.0,
+          "peak_used_percent": 11.0,
           "resets_at": 1794701429,
           "window_minutes": 10080
         }
       },
-      "total_tokens": 54004389,
-      "uncached_input_tokens": 3225267
+      "total_tokens": 67880461,
+      "uncached_input_tokens": 3742965
     }
   },
   "schema": 3,
   "sketch": [
     "0082d48ecaf64893",
+    "0160f0ac3cbca2bb",
     "01e0af8f000dbc39",
     "01ffbfffd879e359",
     "0217cf05ab08839d",
     "0239114388f9d023",
     "02ca82292717491a",
+    "02ef0622c8f83147",
     "0303e2d2d49b8af9",
+    "06c58e1d8a80e7cc",
     "07104d1c2e87c866",
+    "0767b6ff95fcfa9c",
     "07b6e8fa34972fee",
     "07bd7700cfaf25f2",
     "081cfc15084b25c3",
+    "093d83ff19e9df88",
     "0960b7b40e4bc8f6",
+    "09bb5329b96156f1",
     "0a40c3ec01229459",
     "0a6d71d0ef41d8f3",
     "0a6e54f377767ffb",
@@ -79,6 +85,8 @@
     "0bb4a19e484ac0e6",
     "0bd392f61c9b61b8",
     "0bf95ec8ae204c55",
+    "0c6732353b0a4ced",
+    "0ce27988f7465d57",
     "0dd4dd5e7627317c",
     "0de5f328f3b934e5",
     "0e6cecbdc85ce7ac",
@@ -90,13 +98,17 @@
     "10645ad21d914eca",
     "10e121e59bd02cbc",
     "112b41acfca35522",
+    "118a1ef838f993ae",
     "11b74b864388f77f",
     "12295b448a76af6d",
     "127d7de9e5ea6801",
     "1303f4cc9cdbdf58",
+    "1319f82e60f02ba9",
+    "133cfc87ca619a80",
     "14fbd0fe9181f6cb",
     "15063373a370c733",
     "1575a638605d489f",
+    "162448c2ab37f9f9",
     "16a58a23d5db4e6b",
     "176f78a3d1acdf36",
     "1a4449c951eb9a6a",
@@ -108,34 +120,22 @@
     "1d8d4a1ef0d8de63",
     "1e48a50b2b6f3635",
     "1e6532dd59b07913",
-    "1ee40c184cc53e38",
-    "1f14466d7d36f58c",
-    "1f41bcab87b371f3",
-    "1f545a4f49146bc3",
-    "1f976111ba71fad9",
-    "20a65d18992359bf",
-    "2188fde8314364ec",
-    "22356b4848ad0356",
-    "226c016fd32da4b6",
-    "23086a82c0d01dfd",
-    "233fa6417d2daad7",
-    "23c832f253af0010",
-    "24427e2708dcb144"
+    "1ee40c184cc53e38"
   ],
   "sources": {
     "OpenAI Codex": {
       "cache_creation": 0,
-      "cache_read": 50237568,
-      "input_tokens": 3225267,
-      "output_tokens": 89510,
-      "reasoning": 185632
+      "cache_read": 63455360,
+      "input_tokens": 3742965,
+      "output_tokens": 108304,
+      "reasoning": 218691
     }
   },
   "totals": {
     "cache_creation": 0,
-    "cache_read": 50237568,
-    "input_tokens": 3225267,
-    "output_tokens": 89510,
-    "reasoning": 185632
+    "cache_read": 63455360,
+    "input_tokens": 3742965,
+    "output_tokens": 108304,
+    "reasoning": 218691
   }
 }
