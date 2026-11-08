@@ -10,38 +10,38 @@
   },
   "exact": {
     "cache_creation": 0,
-    "cache_read": 1711104,
-    "input_tokens": 105019,
-    "output_tokens": 3281,
-    "reasoning": 4803
+    "cache_read": 16895488,
+    "input_tokens": 1154563,
+    "output_tokens": 36232,
+    "reasoning": 57920
   },
-  "generated_at": "2026-11-08T01:15:55-05:00",
+  "generated_at": "2026-11-08T05:20:30-05:00",
   "generated_by": "claude-cli",
-  "invocations": 21,
+  "invocations": 165,
   "machine": "phoebus",
   "models": {
     "gpt-6-luna": {
       "cache_creation": 0,
-      "cache_read": 1711104,
-      "input_tokens": 105019,
-      "output_tokens": 3281,
-      "reasoning": 4803
+      "cache_read": 16895488,
+      "input_tokens": 1154563,
+      "output_tokens": 36232,
+      "reasoning": 57920
     }
   },
   "partial": true,
   "provider_stats": {
     "OpenAI Codex": {
-      "cache_hit_ratio": 0.9422,
-      "distinct_sessions": 1,
+      "cache_hit_ratio": 0.936,
+      "distinct_sessions": 6,
       "peak_context_used_percent": 77.45,
       "plan_types": [
         "plus"
       ],
       "rate_limits": {
         "primary": {
-          "latest_used_percent": 1.0,
-          "peak_used_percent": 1.0,
-          "resets_at": 1794135381,
+          "latest_used_percent": 4.0,
+          "peak_used_percent": 4.0,
+          "resets_at": 1794135380,
           "window_minutes": 300
         },
         "secondary": {
@@ -51,48 +51,91 @@
           "window_minutes": 10080
         }
       },
-      "total_tokens": 1864581,
-      "uncached_input_tokens": 105019
+      "total_tokens": 18228985,
+      "uncached_input_tokens": 1154563
     }
   },
   "schema": 3,
   "sketch": [
+    "0082d48ecaf64893",
     "01ffbfffd879e359",
+    "07b6e8fa34972fee",
     "07bd7700cfaf25f2",
+    "0a40c3ec01229459",
+    "0a6d71d0ef41d8f3",
+    "0a6e54f377767ffb",
+    "0b0f3a0c320299da",
+    "0b61111f83ea1c02",
+    "0bb4a19e484ac0e6",
+    "10645ad21d914eca",
+    "10e121e59bd02cbc",
+    "112b41acfca35522",
+    "12295b448a76af6d",
     "1303f4cc9cdbdf58",
     "14fbd0fe9181f6cb",
     "15063373a370c733",
+    "1a4449c951eb9a6a",
+    "1bb660177b9ee741",
+    "1ce7006456f6a3ac",
+    "1cf975823fa47312",
     "1f976111ba71fad9",
+    "2188fde8314364ec",
+    "226c016fd32da4b6",
+    "23c832f253af0010",
+    "257d17c16f631caa",
+    "26f9584c8627f39f",
     "2815c9fc6cfe2c18",
+    "282358e93a74a4a2",
+    "289f36141f1bb748",
     "2b5a1913c13013db",
+    "2bcb0e413d0ab9e8",
+    "2e5560c269d9f7d6",
+    "2ebef6e2d7f50637",
     "2ee61dde0a4c24e8",
-    "65bdc2be16a6f877",
-    "6f54501499c25edd",
-    "761f7dd099aa4255",
-    "791d8a73239dc1dd",
-    "8326b1b1b553ea13",
-    "8f5ff0dac5e8f917",
-    "971409641e26d1fa",
-    "aa500d049b6b68fb",
-    "b1747721c5e0ecc8",
-    "b8339d1552e3c165",
-    "f62335a9560f7cab",
-    "f66ef9abc3c53e4a"
+    "3089101888b4fc3d",
+    "32fa534a5f3a4ec6",
+    "331351ad976abce9",
+    "3431d8c2905b44dc",
+    "36a065d75ed7bc18",
+    "375f3dc5b3e3a01d",
+    "37cd16c1d89f174f",
+    "382553e4b55ca11c",
+    "3d37859e9559fb67",
+    "40c3bd9b39f2b9ee",
+    "426b9ab0c4a1d42f",
+    "42a2c9cb75b71298",
+    "43c1381b82b394c6",
+    "43c783b4f09d74da",
+    "448ac68ae7c31120",
+    "46b464ef017972cc",
+    "46f0c0b883d15d42",
+    "472b03cb8733ea23",
+    "49f78ac7b6425a20",
+    "4effffcd8a213056",
+    "5059e7558c403fc8",
+    "51782bbbf284ff4a",
+    "51d85d31e69a1dad",
+    "53445f467be0d636",
+    "56b425962238724b",
+    "56cb4a587c17a2b1",
+    "56e1909b9410770d",
+    "5e7f22f9d0b7b1c4",
+    "600e6fec50b5f382"
   ],
   "sources": {
     "OpenAI Codex": {
       "cache_creation": 0,
-      "cache_read": 1711104,
-      "input_tokens": 105019,
-      "output_tokens": 3281,
-      "reasoning": 4803
+      "cache_read": 16895488,
+      "input_tokens": 1154563,
+      "output_tokens": 36232,
+      "reasoning": 57920
     }
   },
   "totals": {
     "cache_creation": 0,
-    "cache_read": 1711104,
-    "input_tokens": 105019,
-    "output_tokens": 3281,
-    "reasoning": 4803
+    "cache_read": 16895488,
+    "input_tokens": 1154563,
+    "output_tokens": 36232,
+    "reasoning": 57920
   }
 }
