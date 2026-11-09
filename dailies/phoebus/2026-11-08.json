@@ -10,28 +10,28 @@
   },
   "exact": {
     "cache_creation": 0,
-    "cache_read": 87937664,
-    "input_tokens": 4461114,
-    "output_tokens": 148032,
-    "reasoning": 276166
+    "cache_read": 92639872,
+    "input_tokens": 4740827,
+    "output_tokens": 158365,
+    "reasoning": 282112
   },
-  "generated_at": "2026-11-08T21:46:23-05:00",
+  "generated_at": "2026-11-09T01:52:30-05:00",
   "generated_by": "claude-cli",
-  "invocations": 728,
+  "invocations": 771,
   "machine": "phoebus",
   "models": {
     "gpt-6-luna": {
       "cache_creation": 0,
-      "cache_read": 87937664,
-      "input_tokens": 4461114,
-      "output_tokens": 148032,
-      "reasoning": 276166
+      "cache_read": 92639872,
+      "input_tokens": 4740827,
+      "output_tokens": 158365,
+      "reasoning": 282112
     }
   },
-  "partial": true,
+  "partial": false,
   "provider_stats": {
     "OpenAI Codex": {
-      "cache_hit_ratio": 0.9517,
+      "cache_hit_ratio": 0.9513,
       "distinct_sessions": 7,
       "peak_context_used_percent": 93.95,
       "plan_types": [
@@ -39,7 +39,7 @@
       ],
       "rate_limits": {
         "primary": {
-          "latest_used_percent": 1.0,
+          "latest_used_percent": 2.0,
           "peak_used_percent": 62.0,
           "resets_at": 1794208347,
           "window_minutes": 300
@@ -51,13 +51,14 @@
           "window_minutes": 10080
         }
       },
-      "total_tokens": 93275208,
-      "uncached_input_tokens": 4461114
+      "total_tokens": 98320313,
+      "uncached_input_tokens": 4740827
     }
   },
   "schema": 3,
   "sketch": [
     "0059746c7754bb1d",
+    "005f44e9cc9458c9",
     "0082d48ecaf64893",
     "0160f0ac3cbca2bb",
     "01e0af8f000dbc39",
@@ -90,6 +91,8 @@
     "0a6e54f377767ffb",
     "0ac03052f8acefb3",
     "0b0f3a0c320299da",
+    "0b112713892c6957",
+    "0b1571ce87c69615",
     "0b61111f83ea1c02",
     "0b9263bfed5f3250",
     "0b9f34cdda1a1535",
@@ -110,32 +113,29 @@
     "10645ad21d914eca",
     "10e121e59bd02cbc",
     "112b41acfca35522",
+    "1170f53e909a3bf6",
     "118a1ef838f993ae",
     "11b74b864388f77f",
     "12295b448a76af6d",
     "127d7de9e5ea6801",
     "1303f4cc9cdbdf58",
     "1319f82e60f02ba9",
-    "133cfc87ca619a80",
-    "1400a3fdd66b2fb3",
-    "14fbd0fe9181f6cb",
-    "15063373a370c733",
-    "155b0ed54b74723f"
+    "133cfc87ca619a80"
   ],
   "sources": {
     "OpenAI Codex": {
       "cache_creation": 0,
-      "cache_read": 87937664,
-      "input_tokens": 4461114,
-      "output_tokens": 148032,
-      "reasoning": 276166
+      "cache_read": 92639872,
+      "input_tokens": 4740827,
+      "output_tokens": 158365,
+      "reasoning": 282112
     }
   },
   "totals": {
     "cache_creation": 0,
-    "cache_read": 87937664,
-    "input_tokens": 4461114,
-    "output_tokens": 148032,
-    "reasoning": 276166
+    "cache_read": 92639872,
+    "input_tokens": 4740827,
+    "output_tokens": 158365,
+    "reasoning": 282112
   }
 }
