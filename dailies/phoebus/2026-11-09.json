@@ -3,21 +3,21 @@
   "date": "2026-11-09",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 39186059,
-    "input_tokens": 162201,
-    "output_tokens": 49435,
+    "cache_read": 82155300,
+    "input_tokens": 235410,
+    "output_tokens": 72437,
     "reasoning": 0
   },
   "exact": {
-    "cache_creation": 2634700,
-    "cache_read": 612313914,
-    "input_tokens": 9725803,
-    "output_tokens": 843006,
-    "reasoning": 662778
+    "cache_creation": 3859795,
+    "cache_read": 804173202,
+    "input_tokens": 11456404,
+    "output_tokens": 1300814,
+    "reasoning": 930123
   },
-  "generated_at": "2026-11-09T19:00:55-05:00",
+  "generated_at": "2026-11-09T23:33:28-05:00",
   "generated_by": "claude-cli",
-  "invocations": 3130,
+  "invocations": 4594,
   "machine": "phoebus",
   "models": {
     "<synthetic>": {
@@ -35,10 +35,10 @@
       "reasoning": 0
     },
     "claude-fable-5-2": {
-      "cache_creation": 454228,
-      "cache_read": 11922659,
-      "input_tokens": 182,
-      "output_tokens": 63451,
+      "cache_creation": 1383389,
+      "cache_read": 40205591,
+      "input_tokens": 620,
+      "output_tokens": 245136,
       "reasoning": 0
     },
     "claude-haiku-5-5": {
@@ -49,52 +49,52 @@
       "reasoning": 0
     },
     "claude-opus-5-5": {
-      "cache_creation": 421168,
-      "cache_read": 35733906,
-      "input_tokens": 212,
-      "output_tokens": 62892,
+      "cache_creation": 717102,
+      "cache_read": 55769142,
+      "input_tokens": 406,
+      "output_tokens": 166586,
       "reasoning": 0
     },
     "gemini-3-flash-preview (estimated)": {
       "cache_creation": 0,
-      "cache_read": 39186059,
-      "input_tokens": 162201,
-      "output_tokens": 49435,
+      "cache_read": 82155300,
+      "input_tokens": 235410,
+      "output_tokens": 72437,
       "reasoning": 0
     },
     "gpt-6-luna": {
       "cache_creation": 0,
-      "cache_read": 269904256,
-      "input_tokens": 9719155,
-      "output_tokens": 383649,
-      "reasoning": 662778
+      "cache_read": 413445376,
+      "input_tokens": 11449124,
+      "output_tokens": 556078,
+      "reasoning": 930123
     }
   },
   "partial": true,
   "provider_stats": {
     "OpenAI Codex": {
-      "cache_hit_ratio": 0.9652,
-      "distinct_sessions": 16,
-      "peak_context_used_percent": 94.33,
+      "cache_hit_ratio": 0.9731,
+      "distinct_sessions": 17,
+      "peak_context_used_percent": 94.91,
       "plan_types": [
         "plus"
       ],
       "rate_limits": {
         "primary": {
-          "latest_used_percent": 10.0,
+          "latest_used_percent": 6.0,
           "peak_used_percent": 38.0,
-          "resets_at": 1794280708,
+          "resets_at": 1794298708,
           "window_minutes": 300
         },
         "secondary": {
-          "latest_used_percent": 38.0,
-          "peak_used_percent": 38.0,
+          "latest_used_percent": 43.0,
+          "peak_used_percent": 43.0,
           "resets_at": 1794701429,
           "window_minutes": 10080
         }
       },
-      "total_tokens": 282055555,
-      "uncached_input_tokens": 9719155
+      "total_tokens": 428171911,
+      "uncached_input_tokens": 11449124
     }
   },
   "schema": 3,
@@ -102,18 +102,26 @@
     "0000fb3d9a320faa",
     "00260d6a703ea82b",
     "002c0116c52c8871",
+    "00360c1ac5f298eb",
+    "003b548571d3e83b",
     "00537680899d9e6f",
     "00561b99458edecf",
     "0057177a3766b3df",
     "005fe76ba25fd26f",
+    "0066aa4390312eb2",
     "007b69571aeed2a5",
     "009a6786f0548c76",
+    "00a4742c54c9dc77",
     "00b20921d314441e",
     "00b854360fb0cf81",
+    "00d09c67ab4f4ab8",
     "00dae2c6fc5092bc",
     "00df42d3ce006f49",
     "00ec62f861f980a8",
+    "00f41404dcadb745",
     "00faa62faef7408c",
+    "0110df295267f2dc",
+    "0123eef009a1c138",
     "01292c2d651da2b2",
     "012da84a757b7c60",
     "01362333b2d13189",
@@ -133,6 +141,8 @@
     "023b9aff7b1a3e3b",
     "024098ec208be3a2",
     "0241f2466f081059",
+    "0248c42f7bf9fa0c",
+    "0253867aea1b536f",
     "0253a5bc52b46b17",
     "025b086235c8d685",
     "0261d9782558f8d0",
@@ -141,57 +151,47 @@
     "0277fc28da38b59b",
     "02784f41b4e95414",
     "02a790fda2a9aa34",
+    "02cf2134c9eaa419",
     "02dc75cdadc9dcb0",
+    "02eeaa8d2767f4bf",
     "02eeccca5f6e8b18",
     "0303eae6f9c23690",
     "0320f7a85ee6e115",
+    "032fbc80d4cd77f4",
+    "03305968882f4d8c",
+    "033454d07b414ffb",
     "0341bd2637af3f9c",
     "0378279eeae1f16c",
-    "03990587022d5715",
-    "03a037a41d8e8d80",
-    "03bd91ca533b6f81",
-    "0401c6935653ca1b",
-    "0411a4587369ddd8",
-    "0420d6152aa6df66",
-    "043f259d5ed448d8",
-    "0443b2c263467c7f",
-    "046d980b45ffe6c4",
-    "04948f1a07a79531",
-    "04a0a1685dc22c37",
-    "04c6cc3ecf24a0f2",
-    "04c77f45f1eedf47",
-    "04e8dcb41c037b8d",
-    "04fc7e929660f838",
-    "051eaa63699baf90"
+    "03990587022d5715"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 39186059,
-      "input_tokens": 162201,
-      "output_tokens": 49435,
+      "cache_read": 82155300,
+      "input_tokens": 235410,
+      "output_tokens": 72437,
       "reasoning": 0
     },
     "Claude Code": {
-      "cache_creation": 2634700,
-      "cache_read": 342409658,
-      "input_tokens": 6648,
-      "output_tokens": 459357,
+      "cache_creation": 3859795,
+      "cache_read": 390727826,
+      "input_tokens": 7280,
+      "output_tokens": 744736,
       "reasoning": 0
     },
     "OpenAI Codex": {
       "cache_creation": 0,
-      "cache_read": 269904256,
-      "input_tokens": 9719155,
-      "output_tokens": 383649,
-      "reasoning": 662778
+      "cache_read": 413445376,
+      "input_tokens": 11449124,
+      "output_tokens": 556078,
+      "reasoning": 930123
     }
   },
   "totals": {
-    "cache_creation": 2634700,
-    "cache_read": 651499973,
-    "input_tokens": 9888004,
-    "output_tokens": 892441,
-    "reasoning": 662778
+    "cache_creation": 3859795,
+    "cache_read": 886328502,
+    "input_tokens": 11691814,
+    "output_tokens": 1373251,
+    "reasoning": 930123
   }
 }
