@@ -852,6 +852,7 @@ def parse_gemini_markdown_pricing_with_schedules(
     schedules = {}
     if not text or "{% table %}" not in text:
         return results, schedules
+    text = html.unescape(text)
 
     target_day = as_of or datetime.date.today().isoformat()
 

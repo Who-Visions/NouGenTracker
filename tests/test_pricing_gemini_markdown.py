@@ -375,3 +375,10 @@ def test_fetch_vendor_pricing_handles_both_markdoc_and_html(monkeypatch):
     monkeypatch.setattr(pricing_live.urllib.request, "urlopen", lambda req, timeout=None: _FakeResp(html_text.encode("utf-8")))
     parsed_html, _ = pricing_live.fetch_vendor_pricing("gemini")
     assert parsed_html["gemini-3.5-flash"] == (1.50, 9.00, 0.15)
+
+    # 3. Server returns HTML-escaped Markdoc attributes (e.g. title=&quot;Standard&quot; on /pricing)
+    escaped_md = md_text.replace('title="Standard"', 'title=&quot;Standard&quot;').replace('id="gemini-4-carbon"', 'id=&quot;gemini-4-carbon&quot;')
+    pricing_live.reset_process_state()
+    monkeypatch.setattr(pricing_live.urllib.request, "urlopen", lambda req, timeout=None: _FakeResp(escaped_md.encode("utf-8")))
+    parsed_esc, _ = pricing_live.fetch_vendor_pricing("gemini")
+    assert parsed_esc["gemini-4-carbon"] == (2.0, 10.0, 0.1)
