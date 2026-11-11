@@ -299,7 +299,8 @@ VENDOR_SOURCES = [
     (
         "gemini",
         [
-            ("https://ai.google.dev/gemini-api/docs/pricing", {"Accept": "text/html"}),
+            ("https://ai.google.dev/gemini-api/docs/pricing.md.txt", {"Accept": "text/plain, text/markdown"}),
+            ("https://ai.google.dev/gemini-api/docs/pricing", {"Accept": "text/markdown, text/html"}),
         ],
     ),
     (
@@ -317,6 +318,8 @@ VENDOR_SOURCES = [
 _ATTEMPTED_VENDORS = set()
 _MEMORY_CACHE = {}
 _MEMORY_QUARANTINED = {}
+_MEMORY_SCHEDULES = {}
+_LAST_EXTRACTED_SCHEDULES = {}
 _MEMORY_HISTORY = []
 _MEMORY_FETCHED_AT = None
 
@@ -491,11 +494,459 @@ def parse_anthropic_pricing(text: str) -> dict:
     return results
 
 
-def parse_gemini_pricing(text: str) -> dict:
-    """Tolerant parser for Google Gemini API pricing pages with unit normalization & invariant gates."""
-    results = {}
+_MONTHS = {
+    "january": 1, "jan": 1,
+    "february": 2, "feb": 2,
+    "march": 3, "mar": 3,
+    "april": 4, "apr": 4,
+    "may": 5,
+    "june": 6, "jun": 6,
+    "july": 7, "jul": 7,
+    "august": 8, "aug": 8,
+    "september": 9, "sep": 9, "sept": 9,
+    "october": 10, "oct": 10,
+    "november": 11, "nov": 11,
+    "december": 12, "dec": 12,
+}
+
+_DATE_CLAUSE_RE = re.compile(
+    r'\b(through|starting|effective|after|from)\s+([A-Za-z]+\s+\d{1,2},?\s+\d{4})',
+    re.IGNORECASE,
+)
+
+
+def _parse_english_date(date_str: str) -> str | None:
+    """Parse 'November 30, 2026' or 'Dec 1, 2026' -> 'YYYY-MM-DD', or None."""
+    if not date_str:
+        return None
+    cleaned = re.sub(r'\s+', ' ', date_str.replace(",", " ")).strip()
+    m = re.fullmatch(r'([A-Za-z]+)\s+(\d{1,2})\s+(\d{4})', cleaned)
+    if not m:
+        return None
+    month = _MONTHS.get(m.group(1).lower())
+    if not month:
+        return None
+    try:
+        d = datetime.date(int(m.group(3)), month, int(m.group(2)))
+        return d.isoformat()
+    except ValueError:
+        return None
+
+
+def _clean_gemini_cell_text(raw: str) -> str:
+    """Normalize Markdoc/HTML markup in a table cell while preserving line breaks."""
+    if not raw:
+        return ""
+    s = html.unescape(raw)
+    s = re.sub(r'<br\s*/?>|</p>|</div>|</li>', '\n', s, flags=re.IGNORECASE)
+    s = re.sub(r'{%\s*/?\s*sup\s*%}.*?{%\s*/\s*sup\s*%}', ' ', s, flags=re.IGNORECASE | re.DOTALL)
+    s = re.sub(r'{%[^%]*%}', ' ', s)
+    s = re.sub(r'<sup[^>]*>[\s\S]*?</sup>', ' ', s, flags=re.IGNORECASE)
+    s = re.sub(r'<[^>]+>', ' ', s)
+    lines = []
+    for line in s.splitlines():
+        compact = re.sub(r'[ \t]+', ' ', line).strip()
+        if compact:
+            lines.append(compact)
+    return "\n".join(lines)
+
+
+def _is_non_token_rate_segment(seg_low: str) -> bool:
+    """Return True if a pricing segment describes storage, duration, per-image, or tool request fees."""
+    if any(tok in seg_low for tok in (
+        "storage price", "/ hour", "per hour", "equivalent to",
+        "per image", "/image", "per frame", "per second", "per 10s",
+        "/min", "/ min", "per min", "search request", "search quer",
+        "grounded prompt", "requests per",
+    )):
+        return True
+    if ("request" in seg_low or "quer" in seg_low) and "token" not in seg_low:
+        return True
+    return False
+
+
+def _detect_token_unit_strict(text: str) -> float | None:
+    """Detect per-1K vs per-1M token unit ONLY when context describes tokens, not requests/queries/images."""
     if not text:
-        return results
+        return None
+    low = text.lower()
+    if any(non_tok in low for non_tok in ("request", "query", "queries", "image", "frame", "second", "min", "hour")):
+        # Strip non-token phrases unless "tokens" is explicitly tied to this header/segment.
+        if "token" not in low:
+            return None
+    return detect_unit_multiplier(low)
+
+
+def _find_gemini_column_indices(headers: list[str], *, require_feature_name: bool = True) -> tuple[int, int] | None:
+    """Resolve (feature_col_idx, paid_col_idx) from explicit column headers; fail closed on unknown/ambiguous shapes."""
+    if not headers or len(headers) < 2:
+        return None
+    norm = [re.sub(r'\s+', ' ', _clean_gemini_cell_text(h)).strip().lower() for h in headers]
+    paid_matches = [i for i, h in enumerate(norm) if "paid tier" in h]
+    if len(paid_matches) != 1:
+        return None
+    paid_idx = paid_matches[0]
+
+    feature_matches = [i for i, h in enumerate(norm) if h == "feature" or h.startswith("feature ")]
+    if len(feature_matches) == 1:
+        feature_idx = feature_matches[0]
+    elif not require_feature_name and not feature_matches and paid_idx != 0 and norm[0] == "":
+        feature_idx = 0
+    else:
+        return None
+
+    if feature_idx == paid_idx:
+        return None
+    return (feature_idx, paid_idx)
+
+
+def _parse_gemini_paid_cell_entries(cell_raw: str, header_unit: float | None) -> list[tuple[float, str | None, str | None]]:
+    """Extract text-compatible token rate entries [(usd_per_1m, start_iso, end_iso), ...] from a Paid Tier cell.
+
+    Returns [] if the cell is unavailable, lacks unambiguous token units, or only covers
+    non-text modalities (e.g. audio-only TTS output, audio-only STT input, or per-image).
+    """
+    cleaned = _clean_gemini_cell_text(cell_raw)
+    if not cleaned:
+        return []
+
+    # Strip secondary metered equivalents like "or $0.005/min" while preserving trailing modality tags.
+    normalized = re.sub(
+        r'\bor\s+\$[0-9]+(?:\.[0-9]+)?\s*/\s*(?:min|10s|sec|second|image|frame|hour)\b',
+        '',
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    # Strip "Equivalent to $... per 10s ..." clauses
+    normalized = re.sub(r'\bEquivalent to\b[^\n.]*\.?', '', normalized, flags=re.IGNORECASE)
+
+    # Split into lines and into separate "$..." segments so multi-rate cells cannot cross-contaminate
+    raw_segments = []
+    for line in normalized.splitlines():
+        parts = re.split(r'(?=\$[0-9])', line)
+        raw_segments.extend(p.strip() for p in parts if p.strip())
+
+    baseline_entries = []
+    long_context_entries = []
+
+    for seg in raw_segments:
+        if "$" not in seg:
+            continue
+        seg_low = seg.lower()
+        if _is_non_token_rate_segment(seg_low):
+            continue
+
+        # Modality gate: if non-text modality keywords appear on this price segment without "text", skip it.
+        has_non_text_mod = bool(re.search(r'\b(audio|video|image)\b', seg_low))
+        has_text_mod = bool(re.search(r'\btext\b', seg_low))
+        if has_non_text_mod and not has_text_mod:
+            continue
+
+        m_dollar = re.search(r'\$([0-9]+(?:\.[0-9]+)?)', seg)
+        if not m_dollar:
+            continue
+
+        seg_unit = _detect_token_unit_strict(seg)
+        unit = seg_unit if seg_unit is not None else header_unit
+        if unit is None:
+            # Fail closed when neither cell segment nor Paid Tier header yields an unambiguous token unit
+            continue
+
+        val = float(m_dollar.group(1)) * unit
+
+        start_iso, end_iso = None, None
+        m_date = _DATE_CLAUSE_RE.search(seg)
+        if m_date:
+            kw = m_date.group(1).lower()
+            parsed_dt = _parse_english_date(m_date.group(2))
+            if parsed_dt:
+                if kw == "through":
+                    end_iso = parsed_dt
+                else:
+                    start_iso = parsed_dt
+
+        entry = (val, start_iso, end_iso)
+        if re.search(r'>\s*200k|>\s*128k', seg_low):
+            long_context_entries.append(entry)
+        else:
+            baseline_entries.append(entry)
+
+    return baseline_entries
+
+
+def _entry_matches_day(entry: tuple[float, str | None, str | None], day: str) -> bool:
+    _, start_iso, end_iso = entry
+    if start_iso is not None and day < start_iso:
+        return False
+    if end_iso is not None and day > end_iso:
+        return False
+    return True
+
+
+def _pick_rate_for_day(entries: list[tuple[float, str | None, str | None]], day: str) -> float | None:
+    if not entries:
+        return None
+    dated_hits = [e for e in entries if (e[1] is not None or e[2] is not None) and _entry_matches_day(e, day)]
+    if dated_hits:
+        return dated_hits[0][0]
+    undated = [e for e in entries if e[1] is None and e[2] is None]
+    if undated:
+        return undated[0][0]
+    return None
+
+
+def _build_gemini_model_resolution(
+    keys: list[str],
+    inp_entries: list[tuple[float, str | None, str | None]],
+    out_entries: list[tuple[float, str | None, str | None]],
+    cache_entries: list[tuple[float, str | None, str | None]],
+    as_of: str,
+) -> tuple[dict, dict]:
+    """Resolve current (as_of) pricing AND dated schedule bands across input, output, and cache entries."""
+    resolved_models = {}
+    resolved_schedules = {}
+    if not (inp_entries and out_entries and cache_entries):
+        return resolved_models, resolved_schedules
+
+    all_entries = inp_entries + out_entries + cache_entries
+    has_dates = any(e[1] is not None or e[2] is not None for e in all_entries)
+
+    if not has_dates:
+        inp, out, cache = inp_entries[0][0], out_entries[0][0], cache_entries[0][0]
+        for key in keys:
+            ok, reason = validate_live_price(key, inp, out, cache)
+            if not ok:
+                logger.warning("Rejecting %s: %s", key, reason)
+                continue
+            val = (inp, out, cache)
+            resolved_models[key] = val
+            if "." in key:
+                resolved_models[key.replace(".", "-")] = val
+        return resolved_models, resolved_schedules
+
+    # Collect transition start dates from all dated bands
+    starts = set()
+    ends = set()
+    for _, s_dt, e_dt in all_entries:
+        if s_dt is not None:
+            starts.add(s_dt)
+        if e_dt is not None:
+            ends.add(e_dt)
+            next_day = (datetime.date.fromisoformat(e_dt) + datetime.timedelta(days=1)).isoformat()
+            starts.add(next_day)
+
+    if any(e[1] is None for e in all_entries):
+        starts.add("0000-01-01")
+
+    sorted_starts = sorted(starts)
+    bands_raw = []
+    for idx, b_start in enumerate(sorted_starts):
+        if idx + 1 < len(sorted_starts):
+            b_end = (datetime.date.fromisoformat(sorted_starts[idx + 1]) - datetime.timedelta(days=1)).isoformat()
+        else:
+            b_end = None
+        probe_day = b_end if (b_start == "0000-01-01" and b_end is not None) else b_start
+        if b_start == "0000-01-01" and b_end is None:
+            probe_day = as_of
+        inp = _pick_rate_for_day(inp_entries, probe_day)
+        out = _pick_rate_for_day(out_entries, probe_day)
+        cache = _pick_rate_for_day(cache_entries, probe_day)
+        if inp is not None and out is not None and cache is not None:
+            bands_raw.append((b_start, b_end, (inp, out, cache)))
+
+    active_inp = _pick_rate_for_day(inp_entries, as_of)
+    active_out = _pick_rate_for_day(out_entries, as_of)
+    active_cache = _pick_rate_for_day(cache_entries, as_of)
+
+    for key in keys:
+        valid_bands = []
+        for b_start, b_end, trio in bands_raw:
+            ok, reason = validate_live_price(key, trio[0], trio[1], trio[2])
+            if ok:
+                valid_bands.append((b_start, b_end, trio))
+            else:
+                logger.warning("Rejecting %s band %s..%s: %s", key, b_start, b_end, reason)
+
+        if valid_bands:
+            resolved_schedules[key] = valid_bands
+            if "." in key:
+                resolved_schedules[key.replace(".", "-")] = valid_bands
+
+        if active_inp is not None and active_out is not None and active_cache is not None:
+            ok, reason = validate_live_price(key, active_inp, active_out, active_cache)
+            if ok:
+                val = (active_inp, active_out, active_cache)
+                resolved_models[key] = val
+                if "." in key:
+                    resolved_models[key.replace(".", "-")] = val
+            else:
+                logger.warning("Rejecting %s: %s", key, reason)
+
+    return resolved_models, resolved_schedules
+
+
+def _split_markdoc_table_rows(table_body: str) -> list[list[str]]:
+    """Split a Markdoc {% table %} ... {% /table %} block into trimmed rows of cell strings."""
+    raw_rows = re.split(r'\n[ \t]*---+[ \t]*\n', table_body.strip())
+    parsed_rows = []
+    for raw_r in raw_rows:
+        r_str = raw_r.strip("\n")
+        if not r_str.strip():
+            continue
+        # Each cell begins at line-start optional spaces + "* " (or bare "*" at EOL for empty cells)
+        parts = re.split(r'(?:^|\n)[ \t]*\*(?:[ \t]+|$)', r_str)
+        # re.split produces an empty leading element before the first cell
+        if parts and parts[0].strip() == "":
+            parts = parts[1:]
+        if parts:
+            parsed_rows.append([p.strip() for p in parts])
+    return parsed_rows
+
+
+def _extract_gemini_section_keys(heading_raw: str, pre_tab_body: str) -> list[str]:
+    """Extract normalized model IDs from backticked Markdoc links or headings; fail closed on invalid/non-model headings."""
+    heading_clean = re.sub(r'{%[^%]*%}', '', heading_raw).strip()
+    heading_ascii = heading_clean.encode('ascii', 'ignore').decode('ascii').strip()
+    low_head = heading_ascii.lower()
+    if not heading_ascii or any(skip in low_head for skip in (
+        "pricing", "notes", "ai agent context", "gemma ", "lyria", "embedding", "robotics",
+    )):
+        return []
+
+    keys = []
+    # 1. Explicit canonical model slugs like [`gemini-4-carbon`](/docs/models/gemini-4-carbon)
+    for m in re.finditer(r'\[\s*`([^`]*)`\s*\]\([^)]*/docs/models/[^)]*\)', pre_tab_body, re.IGNORECASE):
+        slug = m.group(1).strip()
+        if not slug:
+            # Explicit empty/malformed slug fails closed rather than guessing from prose
+            return []
+        norm = normalize_model_name(slug)
+        if norm and norm not in keys:
+            keys.append(norm)
+
+    if keys:
+        return keys
+
+    # 2. Fallback to normalized heading if no explicit model link was present
+    norm_head = normalize_model_name(heading_ascii)
+    if norm_head and norm_head.startswith("gemini-"):
+        keys.append(norm_head)
+    return keys
+
+
+def parse_gemini_markdown_pricing_with_schedules(
+    text: str,
+    as_of: str = None,
+) -> tuple[dict, dict]:
+    """Parse Google Gemini Markdoc pricing pages into (current_prices, schedules).
+
+    Enforces:
+      - Standard tab only when {% tabs %} is present (fail closed if missing)
+      - Explicit column-header resolution for Feature and Paid Tier (no cells[-1] assumption)
+      - Exact row column-count matching against headers
+      - Header-only token unit extraction (grounding rows cannot poison units)
+      - Full modality validation on both Input and Output (excludes TTS, STT/audio-only, image-only)
+      - Temporal date-band schedule extraction (through/starting dates)
+    """
+    results = {}
+    schedules = {}
+    if not text or "{% table %}" not in text:
+        return results, schedules
+
+    target_day = as_of or datetime.date.today().isoformat()
+
+    try:
+        sections = re.split(r'^##[ \t]+', text, flags=re.MULTILINE)[1:]
+        for sec in sections:
+            lines = sec.splitlines()
+            heading_raw = lines[0] if lines else ""
+            body = "\n".join(lines[1:])
+
+            # Extract text before the first {% tabs %} / {% table %} for canonical slug lookup
+            pre_tab_end = body.find("{% tabs %}")
+            if pre_tab_end == -1:
+                pre_tab_end = body.find("{% table %}")
+            pre_tab_text = body[:pre_tab_end] if pre_tab_end != -1 else body
+
+            keys = _extract_gemini_section_keys(heading_raw, pre_tab_text)
+            if not keys:
+                continue
+
+            if "{% tabs %}" in body:
+                std_m = re.search(
+                    r'{%\s*tab\s+title=["\']Standard["\']\s*%}([\s\S]*?){%\s*/tab\s*%}',
+                    body,
+                    re.IGNORECASE,
+                )
+                if not std_m:
+                    # Tabs exist without Standard -> fail closed (never parse Batch/Priority as Standard)
+                    continue
+                sec_to_search = std_m.group(1)
+            else:
+                sec_to_search = body
+
+            table_m = re.search(r'{%\s*table\s*%}([\s\S]*?){%\s*/table\s*%}', sec_to_search, re.IGNORECASE)
+            if not table_m:
+                continue
+
+            rows = _split_markdoc_table_rows(table_m.group(1))
+            if len(rows) < 2:
+                continue
+
+            headers = rows[0]
+            col_idxs = _find_gemini_column_indices(headers, require_feature_name=True)
+            if col_idxs is None:
+                continue
+            feature_idx, paid_idx = col_idxs
+
+            header_unit = _detect_token_unit_strict(headers[paid_idx])
+
+            inp_entries = []
+            out_entries = []
+            cache_entries = []
+
+            malformed_row = False
+            for cells in rows[1:]:
+                if len(cells) != len(headers):
+                    malformed_row = True
+                    break
+                label = _clean_gemini_cell_text(cells[feature_idx]).lower()
+                paid_raw = cells[paid_idx]
+                if "input price" in label and not inp_entries:
+                    inp_entries = _parse_gemini_paid_cell_entries(paid_raw, header_unit)
+                elif "output price" in label and not out_entries:
+                    out_entries = _parse_gemini_paid_cell_entries(paid_raw, header_unit)
+                elif "context caching" in label and not cache_entries:
+                    cache_entries = _parse_gemini_paid_cell_entries(paid_raw, header_unit)
+
+            if malformed_row:
+                continue
+
+            sec_models, sec_scheds = _build_gemini_model_resolution(
+                keys, inp_entries, out_entries, cache_entries, target_day
+            )
+            results.update(sec_models)
+            schedules.update(sec_scheds)
+    except Exception as e:
+        logger.warning("Gemini Markdoc pricing parse error: %s; degraded to no-data", e)
+
+    return results, schedules
+
+
+def parse_gemini_markdown_pricing(text: str, as_of: str = None) -> dict:
+    """Parse Google Gemini Markdoc pricing pages into {model_key: (in, out, cache_read)}."""
+    models, _ = parse_gemini_markdown_pricing_with_schedules(text, as_of=as_of)
+    return models
+
+
+def _parse_gemini_html_pricing_with_schedules(text: str, as_of: str = None) -> tuple[dict, dict]:
+    """Hardened HTML table parser for Google Gemini API pricing pages."""
+    results = {}
+    schedules = {}
+    if not text or "<table" not in text.lower():
+        return results, schedules
+
+    target_day = as_of or datetime.date.today().isoformat()
 
     try:
         sections = re.findall(r'<h2[^>]*>([\s\S]*?)</h2>([\s\S]*?)(?=<h2|$)', text, re.IGNORECASE)
@@ -505,7 +956,6 @@ def parse_gemini_pricing(text: str) -> dict:
             if not model_name or 'pricing' in model_name.lower():
                 continue
 
-            # Standard tier table preferred; fallback to first table
             std_match = re.search(r'<h3[^>]*>\s*Standard\s*</h3>([\s\S]*?)<(?:h[23]|/section)', content, re.IGNORECASE)
             sec_to_search = std_match.group(1) if std_match else content
             table_match = re.search(r'<table[\s\S]*?</table>', sec_to_search, re.IGNORECASE)
@@ -513,57 +963,70 @@ def parse_gemini_pricing(text: str) -> dict:
                 continue
 
             table_str = table_match.group(0)
-            table_unit = detect_unit_multiplier(table_str)
-
             rows = re.findall(r'<tr[\s\S]*?</tr>', table_str, re.IGNORECASE)
-            inp, out, cache = None, None, None
-            text_compatible = True
+            if len(rows) < 2:
+                continue
+
+            parsed_rows = []
             for r in rows:
-                cells = [re.sub(r'<[^>]+>', ' ', c).strip() for c in re.findall(r'<t[dh][\s\S]*?</t[dh]>', r, re.IGNORECASE)]
-                if len(cells) < 2:
-                    continue
-                label = cells[0].lower()
-                val_cell = cells[-1]
-                # Audio-only and per-image outputs are not text token prices.
-                if 'output price' in label and (
-                    ('audio' in val_cell.lower() and 'text' not in val_cell.lower())
-                    or 'per image' in val_cell.lower() and 'text' not in val_cell.lower()
-                ):
-                    text_compatible = False
-                if 'input price' in label and 'audio' in val_cell.lower() and 'text' not in val_cell.lower():
-                    text_compatible = False
-                m_dollars = re.findall(r'\$([0-9]+(?:\.[0-9]+)?)', val_cell)
-                if not m_dollars:
-                    continue
+                cells = [c for c in re.findall(r'<t[dh][^>]*>([\s\S]*?)</t[dh]>', r, re.IGNORECASE)]
+                if cells:
+                    parsed_rows.append(cells)
 
-                cell_unit = detect_unit_multiplier(val_cell) or table_unit
-                if cell_unit is None:
+            if len(parsed_rows) < 2:
+                continue
+
+            headers = parsed_rows[0]
+            col_idxs = _find_gemini_column_indices(headers, require_feature_name=False)
+            if col_idxs is None:
+                continue
+            feature_idx, paid_idx = col_idxs
+            header_unit = _detect_token_unit_strict(_clean_gemini_cell_text(headers[paid_idx]))
+
+            inp_entries = []
+            out_entries = []
+            cache_entries = []
+
+            for cells in parsed_rows[1:]:
+                if len(cells) != len(headers):
                     continue
+                label = _clean_gemini_cell_text(cells[feature_idx]).lower()
+                paid_raw = cells[paid_idx]
+                if "input price" in label and not inp_entries:
+                    inp_entries = _parse_gemini_paid_cell_entries(paid_raw, header_unit)
+                elif "output price" in label and not out_entries:
+                    out_entries = _parse_gemini_paid_cell_entries(paid_raw, header_unit)
+                elif "context caching" in label and not cache_entries:
+                    cache_entries = _parse_gemini_paid_cell_entries(paid_raw, header_unit)
 
-                val = float(m_dollars[0]) * cell_unit
-                if 'input price' in label and inp is None:
-                    inp = val
-                elif 'output price' in label and out is None:
-                    out = val
-                elif 'context caching' in label and cache is None:
-                    cache = val
-
-            if inp is not None and out is not None and cache is not None and text_compatible:
-                cache_read = cache
-                key = normalize_model_name(model_name)
-                if key:
-                    ok, reason = validate_live_price(key, inp, out, cache_read)
-                    if not ok:
-                        logger.warning("Rejecting %s: %s", key, reason)
-                        continue
-                    val = (inp, out, cache_read)
-                    results[key] = val
-                    if "." in key:
-                        results[key.replace(".", "-")] = val
+            key = normalize_model_name(model_name)
+            if key:
+                sec_models, sec_scheds = _build_gemini_model_resolution(
+                    [key], inp_entries, out_entries, cache_entries, target_day
+                )
+                results.update(sec_models)
+                schedules.update(sec_scheds)
     except Exception as e:
-        logger.warning("Gemini pricing parse error: %s; degraded to no-data", e)
+        logger.warning("Gemini HTML pricing parse error: %s; degraded to no-data", e)
 
-    return results
+    return results, schedules
+
+
+def parse_gemini_pricing_with_schedules(text: str, as_of: str = None) -> tuple[dict, dict]:
+    """Dispatch Gemini Markdoc or HTML pricing pages and return (models_dict, schedules_dict)."""
+    if not text:
+        return {}, {}
+    if "{% table %}" in text:
+        return parse_gemini_markdown_pricing_with_schedules(text, as_of=as_of)
+    if "<table" in text.lower():
+        return _parse_gemini_html_pricing_with_schedules(text, as_of=as_of)
+    return {}, {}
+
+
+def parse_gemini_pricing(text: str, as_of: str = None) -> dict:
+    """Tolerant parser for Google Gemini API pricing pages (Markdoc & HTML) with fail-closed gates."""
+    models, _ = parse_gemini_pricing_with_schedules(text, as_of=as_of)
+    return models
 
 
 def parse_openai_pricing(text: str) -> dict:
@@ -713,7 +1176,7 @@ def parse_openai_pricing(text: str) -> dict:
 
 def load_cache(cache_path: Path = None) -> tuple[dict, bool]:
     """Load cached pricing data. Returns (models_dict, is_valid_bool)."""
-    global _MEMORY_CACHE, _MEMORY_QUARANTINED, _MEMORY_HISTORY, _MEMORY_FETCHED_AT
+    global _MEMORY_CACHE, _MEMORY_QUARANTINED, _MEMORY_SCHEDULES, _MEMORY_HISTORY, _MEMORY_FETCHED_AT
 
     path = cache_path or get_cache_path()
     if not path.is_file():
@@ -741,7 +1204,10 @@ def load_cache(cache_path: Path = None) -> tuple[dict, bool]:
 
         models_raw = data.get("models")
         if models_raw is None:
-            models_raw = {k: v for k, v in data.items() if k not in ("fetched_at", "source_url", "sources", "history", "quarantined")}
+            models_raw = {
+                k: v for k, v in data.items()
+                if k not in ("fetched_at", "source_url", "sources", "history", "quarantined", "schedules")
+            }
 
         models = {}
         for k, v in models_raw.items():
@@ -759,10 +1225,24 @@ def load_cache(cache_path: Path = None) -> tuple[dict, bool]:
             if isinstance(v, (list, tuple)) and len(v) >= 3:
                 quarantined[k] = (float(v[0]), float(v[1]), float(v[2]), QUARANTINED)
 
+        schedules_raw = data.get("schedules") or {}
+        schedules = {}
+        for k, bands in schedules_raw.items():
+            if isinstance(bands, list):
+                parsed_bands = []
+                for band in bands:
+                    if isinstance(band, (list, tuple)) and len(band) == 3:
+                        b_start, b_end, p = band
+                        if isinstance(p, (list, tuple)) and len(p) >= 3:
+                            parsed_bands.append((b_start, b_end, (float(p[0]), float(p[1]), float(p[2]), CACHED)))
+                if parsed_bands:
+                    schedules[k] = parsed_bands
+
         history = data.get("history") or []
 
         _MEMORY_CACHE = models
         _MEMORY_QUARANTINED = quarantined
+        _MEMORY_SCHEDULES = schedules
         _MEMORY_HISTORY = history
         _MEMORY_FETCHED_AT = fetched_at_str
         return (models, is_valid)
@@ -786,9 +1266,10 @@ def save_cache(
     source_urls: dict = None,
     quarantined: dict = None,
     cache_path: Path = None,
+    schedules: dict = None,
 ) -> None:
-    """Save pricing models, quarantine records, and append to history atomically."""
-    global _MEMORY_CACHE, _MEMORY_QUARANTINED, _MEMORY_HISTORY, _MEMORY_FETCHED_AT
+    """Save pricing models, quarantine records, dated schedules, and append to history atomically."""
+    global _MEMORY_CACHE, _MEMORY_QUARANTINED, _MEMORY_SCHEDULES, _MEMORY_HISTORY, _MEMORY_FETCHED_AT
     path = cache_path or get_cache_path()
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -797,6 +1278,7 @@ def save_cache(
         # Load existing history if available
         existing_history = list(_MEMORY_HISTORY)
         existing_quarantined = dict(_MEMORY_QUARANTINED)
+        existing_schedules = dict(_MEMORY_SCHEDULES)
         if path.is_file():
             try:
                 with open(path, "r", encoding="utf-8") as f:
@@ -810,11 +1292,23 @@ def save_cache(
                         }]
                     if "quarantined" in old_data and isinstance(old_data["quarantined"], dict):
                         existing_quarantined.update(old_data["quarantined"])
+                    if "schedules" in old_data and isinstance(old_data["schedules"], dict):
+                        for sk, sbands in old_data["schedules"].items():
+                            if isinstance(sbands, list) and sk not in existing_schedules:
+                                existing_schedules[sk] = sbands
             except Exception:
                 pass
 
         if quarantined:
             existing_quarantined.update({k: list(v[:3]) for k, v in quarantined.items()})
+
+        if schedules:
+            for sk, sbands in schedules.items():
+                existing_schedules[sk] = [[b[0], b[1], list(b[2][:3])] for b in sbands]
+
+        serialized_schedules = {}
+        for sk, sbands in existing_schedules.items():
+            serialized_schedules[sk] = [[b[0], b[1], list(b[2][:3])] for b in sbands]
 
         # Append new snapshot to temporal history
         new_snapshot = {
@@ -829,6 +1323,7 @@ def save_cache(
             "source_url": source_urls or {},
             "models": {k: list(v[:3]) for k, v in models.items()},
             "quarantined": existing_quarantined,
+            "schedules": serialized_schedules,
             "history": existing_history,
         }
 
@@ -856,10 +1351,14 @@ def save_cache(
 
         _MEMORY_CACHE = models
         _MEMORY_QUARANTINED = existing_quarantined
+        _MEMORY_SCHEDULES = {
+            sk: [(b[0], b[1], (float(b[2][0]), float(b[2][1]), float(b[2][2]), CACHED)) for b in sbands]
+            for sk, sbands in serialized_schedules.items()
+        }
         _MEMORY_HISTORY = existing_history
         _MEMORY_FETCHED_AT = now_iso
-        logger.info("Saved pricing cache to %s (%d active, %d quarantined, %d history snapshots)",
-                    path, len(models), len(existing_quarantined), len(existing_history))
+        logger.info("Saved pricing cache to %s (%d active, %d quarantined, %d schedules, %d history snapshots)",
+                    path, len(models), len(existing_quarantined), len(serialized_schedules), len(existing_history))
     except Exception as e:
         logger.warning("Failed to save pricing cache to %s: %s", path, e)
 
@@ -985,7 +1484,9 @@ def fetch_vendor_pricing(vendor: str, timeout_s: float = None) -> tuple[dict, st
             if vendor == "anthropic":
                 parsed = parse_anthropic_pricing(text)
             elif vendor == "gemini":
-                parsed = parse_gemini_pricing(text)
+                parsed, parsed_scheds = parse_gemini_pricing_with_schedules(text)
+                if parsed_scheds:
+                    _LAST_EXTRACTED_SCHEDULES.update(parsed_scheds)
             elif vendor == "openai":
                 parsed = parse_openai_pricing(text)
 
@@ -1008,6 +1509,7 @@ def fetch_all_vendors(
     combined = dict(existing_models)
     quarantined = dict(_MEMORY_QUARANTINED)
     source_urls = {}
+    _LAST_EXTRACTED_SCHEDULES.clear()
 
     # Build baseline for delta guard: existing cache > fallback constants
     baseline = dict(baseline_pricing or {})
@@ -1031,8 +1533,9 @@ def fetch_all_vendors(
                     if last_known:
                         combined[k] = (last_known[0], last_known[1], last_known[2])
 
-    if combined or quarantined:
-        save_cache(combined, source_urls=source_urls, quarantined=quarantined, cache_path=cache_path)
+    schedules = dict(_LAST_EXTRACTED_SCHEDULES)
+    if combined or quarantined or schedules:
+        save_cache(combined, source_urls=source_urls, quarantined=quarantined, cache_path=cache_path, schedules=schedules)
 
     global _MEMORY_CACHE
     _MEMORY_CACHE = combined
@@ -1073,6 +1576,9 @@ def _lookup_price_schedule(price_schedule: dict, key: str, when) -> tuple | None
         return None
     entries = price_schedule.get(key)
     if not entries:
+        alt_key = key.replace("-", ".") if "-" in key else key.replace(".", "-")
+        entries = price_schedule.get(alt_key)
+    if not entries:
         return None
     day = when.strftime("%Y-%m-%d") if hasattr(when, "strftime") else str(when)[:10]
     if len(day) != 10:
@@ -1111,6 +1617,27 @@ def resolve_exact_price(
             if sched is not None:
                 logger.info("[ladder hop 2] PRICE_SCHEDULE hit for %s at %s -> %s", key, when, sched)
                 return sched
+        # Live/cached extracted schedules outrank flat snapshots when a date crosses a published band
+        _, is_valid = load_cache(cache_path)
+        if _MEMORY_SCHEDULES:
+            cached_sched = _lookup_price_schedule(_MEMORY_SCHEDULES, key, when)
+            if cached_sched is not None:
+                logger.info("[ladder hop 2] Cached schedule hit for %s at %s -> %s", key, when, cached_sched)
+                return cached_sched
+        day_str = when.strftime("%Y-%m-%d") if hasattr(when, "strftime") else str(when)[:10]
+        today_str = datetime.date.today().isoformat()
+        if not is_valid and len(day_str) == 10 and day_str >= today_str:
+            unattempted = [v for v, _ in VENDOR_SOURCES if v not in _ATTEMPTED_VENDORS]
+            if unattempted:
+                fetched = fetch_all_vendors(cache_path=cache_path, baseline_pricing=fallback_pricing)
+                if _MEMORY_SCHEDULES:
+                    live_sched = _lookup_price_schedule(_MEMORY_SCHEDULES, key, when)
+                    if live_sched is not None:
+                        inp, out, cache_read = live_sched[:3]
+                        return (inp, out, cache_read, LIVE)
+                if key in fetched:
+                    inp, out, cache_read = fetched[key][:3]
+                    return (inp, out, cache_read, LIVE)
         hist_hit = resolve_historical_cache_price(key, when, cache_path=cache_path)
         if hist_hit is not None:
             logger.info("[ladder hop 2] Historical cache hit for %s at %s -> %s", key, when, hist_hit)
@@ -1135,9 +1662,15 @@ def resolve_exact_price(
         logger.info("[ladder hop 2] Undated schedule-covered model %s -> flat table %s", key, res)
         return res
 
-    # Undated: Valid cache within TTL
+    # Undated: Valid cache within TTL (with active schedule precedence across transitions)
     cached_models, is_valid = load_cache(cache_path)
     if is_valid:
+        if _MEMORY_SCHEDULES:
+            today_str = datetime.date.today().isoformat()
+            sched_now = _lookup_price_schedule(_MEMORY_SCHEDULES, key, today_str)
+            if sched_now is not None:
+                logger.info("[ladder hop 2] Active schedule hit for %s (%s) -> %s", key, today_str, sched_now)
+                return sched_now
         if key in cached_models:
             inp, out, cache_read = cached_models[key][:3]
             res = (inp, out, cache_read, CACHED)
@@ -1281,10 +1814,12 @@ def resolve_price(
 
 def reset_process_state():
     """Reset process-level state (for unit testing)."""
-    global _ATTEMPTED_VENDORS, _MEMORY_CACHE, _MEMORY_QUARANTINED, _MEMORY_HISTORY, _MEMORY_FETCHED_AT
+    global _ATTEMPTED_VENDORS, _MEMORY_CACHE, _MEMORY_QUARANTINED, _MEMORY_SCHEDULES, _LAST_EXTRACTED_SCHEDULES, _MEMORY_HISTORY, _MEMORY_FETCHED_AT
     _ATTEMPTED_VENDORS.clear()
     _MEMORY_CACHE.clear()
     _MEMORY_QUARANTINED.clear()
+    _MEMORY_SCHEDULES.clear()
+    _LAST_EXTRACTED_SCHEDULES.clear()
     _MEMORY_HISTORY.clear()
     _MEMORY_FETCHED_AT = None
 
