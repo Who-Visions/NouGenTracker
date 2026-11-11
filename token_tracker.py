@@ -426,6 +426,8 @@ MODEL_PRICING = {
 # Non-text modalities retain their own units in pricing_catalog, not this bill.
 MODEL_PRICING.update(pricing_catalog.text_prices())
 MODEL_PRICING["gpt-5.6-sol-ultra"] = (*MODEL_PRICING["gpt-5.6-sol"][:3], EST)
+MODEL_PRICING.setdefault("gemini-4-carbon", (2.00, 10.00, 0.100, DOC))
+MODEL_PRICING.setdefault("gemini-4-argon", (2.00, 10.00, 0.100, DOC))
 # Unknown model: conservative estimate so the bill never silently reads $0.
 DEFAULT_PRICING = (1.00, 4.00, 0.100, EST)
 
@@ -459,6 +461,15 @@ PRICE_SCHEDULE = {
 }
 PRICE_SCHEDULE["claude-sonnet-5-thinking"] = PRICE_SCHEDULE["claude-sonnet-5"]
 PRICE_SCHEDULE.update(pricing_catalog.text_price_schedules())
+# Google Gemini 4 Carbon & Argon double on 2026-12-01 (published per ai.google.dev/gemini-api/docs/pricing)
+PRICE_SCHEDULE.setdefault("gemini-4-carbon", [
+    ("2026-01-01", "2026-11-30", (2.00, 10.00, 0.100, DOC)),
+    ("2026-12-01", None, (4.00, 20.00, 0.200, DOC)),
+])
+PRICE_SCHEDULE.setdefault("gemini-4-argon", [
+    ("2026-01-01", "2026-11-30", (2.00, 10.00, 0.100, DOC)),
+    ("2026-12-01", None, (4.00, 20.00, 0.200, DOC)),
+])
 
 
 def _scheduled_price(key, when):
