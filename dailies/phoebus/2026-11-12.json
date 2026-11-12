@@ -1,0 +1,91 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-12",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 7469441,
+    "input_tokens": 50688,
+    "output_tokens": 9673,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 0,
+    "cache_read": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-12T00:43:20-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 39,
+  "machine": "phoebus",
+  "models": {
+    "Gemini 4 Argon (Low) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 7469441,
+      "input_tokens": 50688,
+      "output_tokens": 9673,
+      "reasoning": 0
+    }
+  },
+  "partial": true,
+  "provider_stats": {},
+  "schema": 3,
+  "sketch": [
+    "01c6dad6ef382711",
+    "0456f76ba5093d6e",
+    "08b0ef6d25b864d4",
+    "0e97db7fc6920b8e",
+    "1d42c5165e84237f",
+    "260d9fe221421f45",
+    "2e33447116caea9e",
+    "2f84d04682e516e6",
+    "3144cd8bb8199256",
+    "3373055165ff2c46",
+    "3d9c46fcc3f096db",
+    "415c747f60206d27",
+    "536320079d2fbb90",
+    "53f5cdd0ce8d4c9c",
+    "5c28779f89ac688b",
+    "5ce191f900ce8daf",
+    "6169fa1e501908cb",
+    "6badb3dc9c1103f9",
+    "6bfe453a22595b45",
+    "74b0f47f190e1e9e",
+    "7ec85a9826353b89",
+    "7f21fe1d13853fbd",
+    "8f17b6fc7d669f86",
+    "9e21012a603598ef",
+    "a0065c7a18c37c6f",
+    "a5c36303947a6ca3",
+    "ada386323a817ffc",
+    "b986904ec83ac370",
+    "c016f7e7176a6132",
+    "c9c26117d28004ea",
+    "d26e54e5bbd24dfc",
+    "d3264ef154282567",
+    "d4faab2c0120a5ed",
+    "e6507b1721e47779",
+    "e731bf048eab957a",
+    "ea6d37aaa03a85d1",
+    "eae9aabe47c7db7d",
+    "fa05064e4fd18524",
+    "ff3ac72ea849d4fa"
+  ],
+  "sources": {
+    "Antigravity (Fallback)": {
+      "cache_creation": 0,
+      "cache_read": 7469441,
+      "input_tokens": 50688,
+      "output_tokens": 9673,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 0,
+    "cache_read": 7469441,
+    "input_tokens": 50688,
+    "output_tokens": 9673,
+    "reasoning": 0
+  }
+}
