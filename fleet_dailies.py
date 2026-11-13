@@ -523,6 +523,39 @@ def rollup(invocations: Iterable[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
                         f"openai_{limit_name}_window_minutes")
                     sample["resets_at"] = inv.get(
                         f"openai_{limit_name}_resets_at")
+        elif source == "Claude Code":
+            # Like-for-like with the Codex stats above. Anthropic reports three
+            # disjoint input buckets: input_tokens (neither cached nor written),
+            # cache_creation (new tokens written to the cache) and cache_read.
+            # OpenAI reports no write bucket: every token it did not serve from
+            # cache sits in its uncached input. So the comparable Claude figure
+            # is input + cache_creation, not input alone. Comparing Codex's
+            # uncached input with Claude's bare input_tokens made Codex look
+            # like ~99.9% of the fleet's fresh input on 2026-11-12 (4.7M vs
+            # 1,953) when Claude had written 12.5M tokens to cache that day.
+            stats = bucket["provider_stats"].setdefault(
+                source,
+                {"session_ids": set(), "plan_types": set(),
+                 "uncached_input_tokens": 0, "total_tokens": 0,
+                 "input_tokens": 0, "cached_input_tokens": 0,
+                 "cache_write_tokens": 0,
+                 "peak_context_used_percent": 0.0,
+                 "rate_limits": {}},
+            )
+            session_id = inv.get("session_id")
+            if session_id:
+                stats["session_ids"].add(str(session_id))
+            fresh = int(inv.get("input_tokens") or 0)
+            written = int(inv.get("cache_creation") or 0)
+            cached_input = int(inv.get("cache_read") or 0)
+            # input_tokens here means "input not served from cache", the same
+            # meaning it has in the Codex stats, so one ratio formula serves both.
+            stats["input_tokens"] += fresh + written
+            stats["cache_write_tokens"] += written
+            stats["cached_input_tokens"] += cached_input
+            stats["uncached_input_tokens"] += fresh + written
+            stats["total_tokens"] += (fresh + written + cached_input
+                                      + int(inv.get("output_tokens") or 0))
         bucket["fingerprints"].append(fingerprint(inv))
         bucket["invocations"] += 1
 
@@ -553,6 +586,11 @@ def rollup(invocations: Iterable[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
                 "plan_types": sorted(stats["plan_types"]),
                 "rate_limits": limits,
             }
+            if "cache_write_tokens" in stats:
+                # Only providers that report cache writes carry this field;
+                # OpenAI does not, and a zero there would read as measured.
+                public[provider]["cache_write_tokens"] = int(
+                    stats["cache_write_tokens"])
         return public
 
     # defaultdicts serialise fine but compare badly in tests; freeze them.
