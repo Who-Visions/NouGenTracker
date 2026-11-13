@@ -19,6 +19,7 @@ function Say($m) { Add-Content -Path $Log -Encoding utf8 -Value ("{0} {1}" -f (G
 $Candidates = @(
   "$env:USERPROFILE\Watchtower\NouGen\NouGenTracker",
   "$env:USERPROFILE\Outpost\NouGenTracker",
+  "$env:USERPROFILE\NouGenTools\NouGenTracker",
   "$env:USERPROFILE\.nougen\nougentracker-live-safe",
   "$env:USERPROFILE\.nougen\tracker")
 $Repo = $env:NOUGENTRACKER_DIR
@@ -28,7 +29,8 @@ Set-Location $Repo
 
 $Py = @("$env:LOCALAPPDATA\Programs\Python\Python311\python.exe",
         "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe",
-        "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+        "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe",
+        "C:\Python311\python.exe", "C:\Python312\python.exe", "C:\Python313\python.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $Py) { Say 'FATAL no real python.exe (WindowsApps alias does not run under Task Scheduler)'; exit 1 }
 
 $Machine = (& $Py -c "import fleet_dailies as f; print(f.resolve_machine())" 2>$null | Select-Object -Last 1)
