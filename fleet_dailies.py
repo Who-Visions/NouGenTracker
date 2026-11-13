@@ -542,9 +542,12 @@ def rollup(invocations: Iterable[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
                  "peak_context_used_percent": 0.0,
                  "rate_limits": {}},
             )
-            session_id = inv.get("session_id")
-            if session_id:
-                stats["session_ids"].add(str(session_id))
+            # parse_claude() sets session_id to the PROJECT, so it would count
+            # every conversation in one project as one session. The transcript
+            # file is one conversation, matching Codex's per-rollout count.
+            session_key = inv.get("source_file") or inv.get("session_id")
+            if session_key:
+                stats["session_ids"].add(str(session_key))
             fresh = int(inv.get("input_tokens") or 0)
             written = int(inv.get("cache_creation") or 0)
             cached_input = int(inv.get("cache_read") or 0)

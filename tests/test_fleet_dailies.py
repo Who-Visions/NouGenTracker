@@ -123,11 +123,15 @@ def test_rollup_claude_stats_are_like_for_like_with_codex():
     # Claude: 10 plain input + 990 written to cache + 9,000 read from cache.
     # Codex reports no write bucket, so its uncached input already includes
     # the new tokens. The comparable Claude figure is input + cache_creation.
+    # Both Claude records come from ONE project (parse_claude's session_id)
+    # but two transcripts: that is two conversations.
     invs = [
         dict(_inv("2026-11-12", input_tokens=4, cache_creation=600,
-                  cache_read=5_000, output_tokens=50), session_id="s1"),
+                  cache_read=5_000, output_tokens=50), session_id="s1",
+             source_file="conv-a.jsonl"),
         dict(_inv("2026-11-12", input_tokens=6, cache_creation=390,
-                  cache_read=4_000, output_tokens=30), session_id="s2"),
+                  cache_read=4_000, output_tokens=30), session_id="s1",
+             source_file="conv-b.jsonl"),
         dict(_inv("2026-11-12", source="OpenAI Codex", model="gpt",
                   input_tokens=700, cache_read=9_300, output_tokens=40),
              session_id="c1", openai_uncached_input_tokens=700,
@@ -145,7 +149,8 @@ def test_rollup_claude_stats_are_like_for_like_with_codex():
     assert codex["cache_hit_ratio"] == pytest.approx(9_300 / 10_000)
     # OpenAI reports no write bucket, so Codex must not claim a measured zero.
     assert "cache_write_tokens" not in codex
-    assert "s1" not in json.dumps(claude)
+    blob = json.dumps(claude)
+    assert "s1" not in blob and "conv-a" not in blob
 
 
 def test_rollup_claude_stats_are_zero_safe():
