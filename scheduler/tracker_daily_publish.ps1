@@ -17,6 +17,7 @@ function Say($m) { Add-Content -Path $Log -Encoding utf8 -Value ("{0} {1}" -f (G
 
 # Resolve the clone instead of hardcoding one box's layout.
 $Candidates = @(
+  "$env:USERPROFILE\.nougen\tracker-publish",   # dedicated clean clone first: work clones carry uncommitted edits that block publishing (blade skipped every run 2026-11-11..13)
   "$env:USERPROFILE\Watchtower\NouGen\NouGenTracker",
   "$env:USERPROFILE\Outpost\NouGenTracker",
   "$env:USERPROFILE\NouGenTools\NouGenTracker",
