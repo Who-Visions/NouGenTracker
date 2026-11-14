@@ -3,8 +3,8 @@
   "date": "2026-11-13",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 3059482,
-    "input_tokens": 97727,
+    "cache_read": 2832002,
+    "input_tokens": 103727,
     "output_tokens": 19399,
     "reasoning": 0
   },
@@ -15,7 +15,7 @@
     "output_tokens": 1183421,
     "reasoning": 108107
   },
-  "generated_at": "2026-11-13T23:46:59-05:00",
+  "generated_at": "2026-11-14T04:14:26-05:00",
   "generated_by": "claude-cli",
   "invocations": 2429,
   "machine": "phoebus",
@@ -29,15 +29,15 @@
     },
     "Claude Opus 5.5 (Medium) (estimated)": {
       "cache_creation": 0,
-      "cache_read": 1459646,
+      "cache_read": 1346646,
       "input_tokens": 8939,
       "output_tokens": 5959,
       "reasoning": 0
     },
     "Orchestrator (Argon) (estimated)": {
       "cache_creation": 0,
-      "cache_read": 760077,
-      "input_tokens": 29844,
+      "cache_read": 645597,
+      "input_tokens": 35844,
       "output_tokens": 9349,
       "reasoning": 0
     },
@@ -98,7 +98,7 @@
       "reasoning": 5677
     }
   },
-  "partial": true,
+  "partial": false,
   "provider_stats": {
     "OpenAI Codex": {
       "cache_hit_ratio": 0.9357,
@@ -130,6 +130,7 @@
     "00099f367f673a90",
     "002f0eeb94a66ff9",
     "004832957ea5a2cd",
+    "004b513a6dc16f89",
     "006680deb6555354",
     "009e4fe119f1d8eb",
     "00a1a5c517f2e243",
@@ -143,14 +144,12 @@
     "0167a4548be82ccb",
     "016826736b1dc68d",
     "01aabb6e0dcf0322",
-    "01fee202e3d20d67",
     "020503eefaa1dd70",
     "021737ea2dc685e6",
     "022863a0c3421e58",
     "024bfd8c784b775a",
     "0262fded37e28918",
     "0280e16ccd93a499",
-    "028bc07062b57795",
     "02976b325ab57e4d",
     "0297c7c8865d3e7a",
     "029bb6181dddd824",
@@ -181,7 +180,6 @@
     "0545ba783875229c",
     "05786a0e5d87b49d",
     "05963a01021e88a2",
-    "05b8e9e3c9c8894d",
     "05cd8ad74ae9614a",
     "05e34f7f10192e88",
     "062d27bb36c80f6b",
@@ -190,13 +188,15 @@
     "06b9091ac8845343",
     "06d1f4850d39864d",
     "06d865f9fecf7565",
-    "072db758183eeac1"
+    "072db758183eeac1",
+    "074969454356ffcb",
+    "0779ea3fbb1495af"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 3059482,
-      "input_tokens": 97727,
+      "cache_read": 2832002,
+      "input_tokens": 103727,
       "output_tokens": 19399,
       "reasoning": 0
     },
@@ -217,8 +217,8 @@
   },
   "totals": {
     "cache_creation": 4374070,
-    "cache_read": 625804026,
-    "input_tokens": 2862089,
+    "cache_read": 625576546,
+    "input_tokens": 2868089,
     "output_tokens": 1202820,
     "reasoning": 108107
   }
