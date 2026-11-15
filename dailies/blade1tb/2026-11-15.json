@@ -1,0 +1,95 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-15",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 339169,
+    "cache_read": 5563987,
+    "input_tokens": 74,
+    "output_tokens": 12919,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-15T02:51:48-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 36,
+  "machine": "blade1tb",
+  "models": {
+    "claude-haiku-5-5": {
+      "cache_creation": 184478,
+      "cache_read": 3022951,
+      "input_tokens": 36,
+      "output_tokens": 7062,
+      "reasoning": 0
+    },
+    "claude-opus-5-5": {
+      "cache_creation": 154691,
+      "cache_read": 2541036,
+      "input_tokens": 38,
+      "output_tokens": 5857,
+      "reasoning": 0
+    }
+  },
+  "partial": true,
+  "provider_stats": {},
+  "schema": 3,
+  "sketch": [
+    "02a1235c0877bed1",
+    "03f9b27a2c494d85",
+    "044a59fa5af1c0d5",
+    "1237f77376811298",
+    "12b42e3645d142bc",
+    "17848a7c80b2f074",
+    "1c77c028c4ccf79a",
+    "29d5a3f65d3627c5",
+    "2d61fac68b4b07b6",
+    "30fb14ea73bae099",
+    "33e1c790f9a8334c",
+    "3fc51bcb6a59a4b0",
+    "4eee3b491341f71b",
+    "50bf1f16af781c98",
+    "5438389413a0d196",
+    "58585fabe8de79fa",
+    "71c6c953b3d9c595",
+    "79da936e2f0f3f59",
+    "7ac7a45123fac9a7",
+    "83c1caaa4cffd2ba",
+    "8c5674f8fa535cac",
+    "8f729fca0c94d4c6",
+    "90e62f6cc50394a1",
+    "99d1e4cd5de936dd",
+    "a09d4f761c61735e",
+    "a930cfa99939c70a",
+    "aaeb78afa60cc5a9",
+    "ab4514e7fe2e5105",
+    "aff87aab1ce9df59",
+    "c36fcad2120df668",
+    "cf3089dd6d3c9370",
+    "d09ba401250da239",
+    "d2986204a877bb09",
+    "d4f8748238ac5ab9",
+    "d5698b4a0ea10194",
+    "efab5d83625881b3"
+  ],
+  "sources": {
+    "Claude Code": {
+      "cache_creation": 339169,
+      "cache_read": 5563987,
+      "input_tokens": 74,
+      "output_tokens": 12919,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 339169,
+    "cache_read": 5563987,
+    "input_tokens": 74,
+    "output_tokens": 12919,
+    "reasoning": 0
+  }
+}
