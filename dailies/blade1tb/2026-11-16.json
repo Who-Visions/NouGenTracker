@@ -1,0 +1,179 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-16",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 64140282,
+    "input_tokens": 390700,
+    "output_tokens": 151842,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 16084235,
+    "cache_read": 257267727,
+    "input_tokens": 2384,
+    "output_tokens": 575662,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-17T02:26:22-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 1682,
+  "machine": "blade1tb",
+  "models": {
+    "<synthetic>": {
+      "cache_creation": 0,
+      "cache_read": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "reasoning": 0
+    },
+    "Gemini 4 Argon (Low) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 32681107,
+      "input_tokens": 196632,
+      "output_tokens": 79831,
+      "reasoning": 0
+    },
+    "Gemini 4 Argon (Medium) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 227038,
+      "input_tokens": 17390,
+      "output_tokens": 5909,
+      "reasoning": 0
+    },
+    "Gemini 4 Hydrogen (Medium) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 14879963,
+      "input_tokens": 34845,
+      "output_tokens": 19327,
+      "reasoning": 0
+    },
+    "claude-fable-5-2": {
+      "cache_creation": 1707562,
+      "cache_read": 43177094,
+      "input_tokens": 380,
+      "output_tokens": 152018,
+      "reasoning": 0
+    },
+    "claude-haiku-5-5": {
+      "cache_creation": 1857693,
+      "cache_read": 13136173,
+      "input_tokens": 150,
+      "output_tokens": 25953,
+      "reasoning": 0
+    },
+    "claude-opus-5-5": {
+      "cache_creation": 7021949,
+      "cache_read": 138270880,
+      "input_tokens": 1260,
+      "output_tokens": 270741,
+      "reasoning": 0
+    },
+    "claude-sonnet-5-5": {
+      "cache_creation": 5497031,
+      "cache_read": 62683580,
+      "input_tokens": 594,
+      "output_tokens": 126950,
+      "reasoning": 0
+    },
+    "gemini-3-flash-preview (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 16352174,
+      "input_tokens": 141833,
+      "output_tokens": 46775,
+      "reasoning": 0
+    }
+  },
+  "partial": false,
+  "provider_stats": {},
+  "schema": 3,
+  "sketch": [
+    "006a6e334d2e0fad",
+    "0116a41a63a19fde",
+    "011ee78cd97b78e6",
+    "0126661959be5545",
+    "014c4a67bb4d9ab5",
+    "018b63b25187bec9",
+    "019587373ad0d18b",
+    "01986a5c12e6fe6b",
+    "01e9a978a7ee2b9d",
+    "0203b1be3552e23a",
+    "021594afeb108c5d",
+    "02487bdee7cf402f",
+    "02b8f9b58b298ae1",
+    "0329382b72fb8306",
+    "0331267151f3c564",
+    "034eba828fc4a44c",
+    "035732ac0e83e397",
+    "0377488adee94e74",
+    "03ce670ea50d9974",
+    "03ddf6e735ae6e2c",
+    "03e80eacf1f97a0c",
+    "04073d1b127060ce",
+    "043fa30d603a04c5",
+    "047a78e19d8cbaed",
+    "048408bcffeab930",
+    "049dbc330117de3d",
+    "04d149e0535bd764",
+    "050933f5e52a8974",
+    "0577cd24e3c081da",
+    "058abaf6d3daf47c",
+    "05bed87b57e367b8",
+    "05c417c32bd335fb",
+    "05ef1a9ed3f63aec",
+    "063d02b0302983b6",
+    "0655920b5647216b",
+    "0672f8ad119c330f",
+    "06798c386345d70e",
+    "067a342289011890",
+    "067bac28d8a15ac2",
+    "068c361d57e62e53",
+    "06bbaaa276e2e1db",
+    "06beb981313b07bc",
+    "06dae4fe32a3a150",
+    "070568cb0c89fd65",
+    "070de391315dd6b8",
+    "07159758886753df",
+    "073ad61f5497391d",
+    "076810a3e98e0ad9",
+    "07b4004f58887dd2",
+    "07d14829d2eadaeb",
+    "07d3ed14067ee244",
+    "07e77cb200e6ee44",
+    "07e7990eec1ad095",
+    "0854f5bdd9d5001d",
+    "085e5634f65cd084",
+    "08a094d7057d1fbe",
+    "08e9ff62d0e56e67",
+    "0913118396ed62bc",
+    "092a6d610620fdf4",
+    "09346c7a82eb4efe",
+    "094d0041b3d84aeb",
+    "0957d723343308d7",
+    "096be4183051463f",
+    "09ae728205eed37b"
+  ],
+  "sources": {
+    "Antigravity (Fallback)": {
+      "cache_creation": 0,
+      "cache_read": 64140282,
+      "input_tokens": 390700,
+      "output_tokens": 151842,
+      "reasoning": 0
+    },
+    "Claude Code": {
+      "cache_creation": 16084235,
+      "cache_read": 257267727,
+      "input_tokens": 2384,
+      "output_tokens": 575662,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 16084235,
+    "cache_read": 321408009,
+    "input_tokens": 393084,
+    "output_tokens": 727504,
+    "reasoning": 0
+  }
+}
