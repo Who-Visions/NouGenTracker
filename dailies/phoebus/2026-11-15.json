@@ -15,7 +15,7 @@
     "output_tokens": 123051,
     "reasoning": 0
   },
-  "generated_at": "2026-11-16T17:09:35-05:00",
+  "generated_at": "2026-11-16T21:25:30-05:00",
   "generated_by": "claude-cli",
   "invocations": 474,
   "machine": "phoebus",
@@ -43,7 +43,18 @@
     }
   },
   "partial": false,
-  "provider_stats": {},
+  "provider_stats": {
+    "Claude Code": {
+      "cache_hit_ratio": 0.9916,
+      "cache_write_tokens": 641746,
+      "distinct_sessions": 2,
+      "peak_context_used_percent": 0.0,
+      "plan_types": [],
+      "rate_limits": {},
+      "total_tokens": 76938909,
+      "uncached_input_tokens": 642255
+    }
+  },
   "schema": 3,
   "sketch": [
     "0024b3f1a8ddb88f",
