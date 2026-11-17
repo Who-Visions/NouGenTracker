@@ -119,6 +119,47 @@ def test_rollup_openai_stats_are_zero_safe():
     assert stats["peak_context_used_percent"] == 0.0
 
 
+def test_rollup_claude_stats_are_like_for_like_with_codex():
+    # Claude: 10 plain input + 990 written to cache + 9,000 read from cache.
+    # Codex reports no write bucket, so its uncached input already includes
+    # the new tokens. The comparable Claude figure is input + cache_creation.
+    # Both Claude records come from ONE project (parse_claude's session_id)
+    # but two transcripts: that is two conversations.
+    invs = [
+        dict(_inv("2026-11-12", input_tokens=4, cache_creation=600,
+                  cache_read=5_000, output_tokens=50), session_id="s1",
+             source_file="conv-a.jsonl"),
+        dict(_inv("2026-11-12", input_tokens=6, cache_creation=390,
+                  cache_read=4_000, output_tokens=30), session_id="s1",
+             source_file="conv-b.jsonl"),
+        dict(_inv("2026-11-12", source="OpenAI Codex", model="gpt",
+                  input_tokens=700, cache_read=9_300, output_tokens=40),
+             session_id="c1", openai_uncached_input_tokens=700,
+             openai_total_tokens=10_040),
+    ]
+    ps = fd.rollup(invs)["2026-11-12"]["provider_stats"]
+    claude = ps["Claude Code"]
+    assert claude["uncached_input_tokens"] == 1_000  # 10 + 990, not 10
+    assert claude["cache_write_tokens"] == 990
+    assert claude["cache_hit_ratio"] == pytest.approx(9_000 / 10_000)
+    assert claude["distinct_sessions"] == 2
+    assert claude["total_tokens"] == 10_000 + 80
+    codex = ps["OpenAI Codex"]
+    assert codex["uncached_input_tokens"] == 700
+    assert codex["cache_hit_ratio"] == pytest.approx(9_300 / 10_000)
+    # OpenAI reports no write bucket, so Codex must not claim a measured zero.
+    assert "cache_write_tokens" not in codex
+    blob = json.dumps(claude)
+    assert "s1" not in blob and "conv-a" not in blob
+
+
+def test_rollup_claude_stats_are_zero_safe():
+    stats = fd.rollup([dict(_inv("2026-11-12"), session_id="s")])[
+        "2026-11-12"]["provider_stats"]["Claude Code"]
+    assert stats["cache_hit_ratio"] == 0.0
+    assert stats["uncached_input_tokens"] == 0
+
+
 # --- export ---------------------------------------------------------------
 
 def test_export_is_idempotent_per_day(tmp_path):
