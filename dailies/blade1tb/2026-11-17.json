@@ -3,9 +3,9 @@
   "date": "2026-11-17",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 16565694,
-    "input_tokens": 151756,
-    "output_tokens": 39105,
+    "cache_read": 16752916,
+    "input_tokens": 170356,
+    "output_tokens": 43891,
     "reasoning": 0
   },
   "exact": {
@@ -15,9 +15,9 @@
     "output_tokens": 171453,
     "reasoning": 0
   },
-  "generated_at": "2026-11-18T06:52:16-05:00",
+  "generated_at": "2026-11-18T18:26:03-05:00",
   "generated_by": "claude-cli",
-  "invocations": 469,
+  "invocations": 483,
   "machine": "blade1tb",
   "models": {
     "<synthetic>": {
@@ -25,6 +25,13 @@
       "cache_read": 0,
       "input_tokens": 0,
       "output_tokens": 0,
+      "reasoning": 0
+    },
+    "Gemini 4 Hydrogen (Medium) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 187222,
+      "input_tokens": 18600,
+      "output_tokens": 4786,
       "reasoning": 0
     },
     "claude-fable-5-2": {
@@ -132,16 +139,16 @@
     "1b5eb43b99f2c226",
     "1b6784673dffa2ae",
     "1b68047d0950b3c6",
+    "1b91ce387e0f8936",
     "1cad982eff66618b",
-    "1cdc1bb636ecdf19",
-    "1eaf1b898feec8bc"
+    "1cdc1bb636ecdf19"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 16565694,
-      "input_tokens": 151756,
-      "output_tokens": 39105,
+      "cache_read": 16752916,
+      "input_tokens": 170356,
+      "output_tokens": 43891,
       "reasoning": 0
     },
     "Claude Code": {
@@ -154,9 +161,9 @@
   },
   "totals": {
     "cache_creation": 2968320,
-    "cache_read": 70682004,
-    "input_tokens": 152240,
-    "output_tokens": 210558,
+    "cache_read": 70869226,
+    "input_tokens": 170840,
+    "output_tokens": 215344,
     "reasoning": 0
   }
 }
