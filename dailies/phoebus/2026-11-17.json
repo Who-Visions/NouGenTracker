@@ -3,8 +3,8 @@
   "date": "2026-11-17",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 6345127,
-    "input_tokens": 307622,
+    "cache_read": 4600453,
+    "input_tokens": 313623,
     "output_tokens": 53168,
     "reasoning": 0
   },
@@ -15,7 +15,7 @@
     "output_tokens": 724121,
     "reasoning": 0
   },
-  "generated_at": "2026-11-17T23:52:47-05:00",
+  "generated_at": "2026-11-18T04:06:16-05:00",
   "generated_by": "claude-cli",
   "invocations": 1510,
   "machine": "phoebus",
@@ -29,8 +29,8 @@
     },
     "Gemini 4 Hydrogen (Medium) (estimated)": {
       "cache_creation": 0,
-      "cache_read": 3879541,
-      "input_tokens": 83795,
+      "cache_read": 2134867,
+      "input_tokens": 89796,
       "output_tokens": 29058,
       "reasoning": 0
     },
@@ -63,7 +63,7 @@
       "reasoning": 0
     }
   },
-  "partial": true,
+  "partial": false,
   "provider_stats": {
     "Claude Code": {
       "cache_hit_ratio": 0.9817,
@@ -93,7 +93,6 @@
     "01d37d5bfe9063f3",
     "01f002d008d89648",
     "02070618bf8c4553",
-    "025781f04969f60e",
     "0268c052bb3dc49e",
     "028136bfc7fcba56",
     "02cdcd8b02b1a0e3",
@@ -113,20 +112,22 @@
     "0417fa0ade1f5d36",
     "047b312592e3dbd1",
     "0488252b7a060c44",
+    "048f3d567c6d68e1",
     "04f012b55fff28ac",
-    "0516e70641559cc3",
     "054f47aeed2e9863",
     "058914e2c911e82f",
     "05dbb184eb176c2e",
     "0610a1f00900441e",
     "061423a8c80931f0",
     "0641af29966935b3",
+    "0733fec22c23fb17",
     "077e5bd2dbad9cb8",
     "0798ed28b60c5153",
     "07d452dd20ac7ab6",
     "07ffceecc55cf496",
     "08429d76bae35dec",
     "0849acc3a9ef2753",
+    "08a6b251e30dea28",
     "08dbcef3a48a139b",
     "08e47ff18c7b8212",
     "091ae83e0867b546",
@@ -140,14 +141,13 @@
     "0b1bd4b0166bb49d",
     "0b36caf64e149c7b",
     "0b781672cdaf5b62",
-    "0b817dbfd8ff9b0b",
-    "0bc0203afa2cd79e"
+    "0b817dbfd8ff9b0b"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 6345127,
-      "input_tokens": 307622,
+      "cache_read": 4600453,
+      "input_tokens": 313623,
       "output_tokens": 53168,
       "reasoning": 0
     },
@@ -161,8 +161,8 @@
   },
   "totals": {
     "cache_creation": 6752448,
-    "cache_read": 368128878,
-    "input_tokens": 309998,
+    "cache_read": 366384204,
+    "input_tokens": 315999,
     "output_tokens": 777289,
     "reasoning": 0
   }
