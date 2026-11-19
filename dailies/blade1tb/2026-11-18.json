@@ -3,21 +3,21 @@
   "date": "2026-11-18",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 5017207,
-    "input_tokens": 168201,
-    "output_tokens": 38170,
+    "cache_read": 5467099,
+    "input_tokens": 176026,
+    "output_tokens": 40532,
     "reasoning": 0
   },
   "exact": {
-    "cache_creation": 4975077,
-    "cache_read": 160767350,
-    "input_tokens": 798476,
-    "output_tokens": 326882,
+    "cache_creation": 5149382,
+    "cache_read": 164240785,
+    "input_tokens": 798512,
+    "output_tokens": 345611,
     "reasoning": 865
   },
-  "generated_at": "2026-11-18T18:57:46-05:00",
+  "generated_at": "2026-11-18T22:52:31-05:00",
   "generated_by": "claude-cli",
-  "invocations": 632,
+  "invocations": 670,
   "machine": "blade1tb",
   "models": {
     "<synthetic>": {
@@ -49,17 +49,17 @@
       "reasoning": 0
     },
     "claude-fable-5-2": {
-      "cache_creation": 2081675,
-      "cache_read": 51485939,
-      "input_tokens": 314,
-      "output_tokens": 162688,
+      "cache_creation": 2106358,
+      "cache_read": 54408900,
+      "input_tokens": 338,
+      "output_tokens": 178490,
       "reasoning": 0
     },
     "claude-opus-5-5": {
-      "cache_creation": 1931611,
-      "cache_read": 92539406,
-      "input_tokens": 418,
-      "output_tokens": 135436,
+      "cache_creation": 2081233,
+      "cache_read": 93089880,
+      "input_tokens": 430,
+      "output_tokens": 138363,
       "reasoning": 0
     },
     "claude-sonnet-5-5": {
@@ -71,9 +71,9 @@
     },
     "gemini-3-flash-preview (estimated)": {
       "cache_creation": 0,
-      "cache_read": 1480776,
-      "input_tokens": 86880,
-      "output_tokens": 11417,
+      "cache_read": 1930668,
+      "input_tokens": 94705,
+      "output_tokens": 13779,
       "reasoning": 0
     },
     "gpt-6-luna": {
@@ -94,14 +94,14 @@
   "partial": true,
   "provider_stats": {
     "Claude Code": {
-      "cache_hit_ratio": 0.9695,
-      "cache_write_tokens": 4975077,
-      "distinct_sessions": 12,
+      "cache_hit_ratio": 0.9692,
+      "cache_write_tokens": 5149382,
+      "distinct_sessions": 13,
       "peak_context_used_percent": 0.0,
       "plan_types": [],
       "rate_limits": {},
-      "total_tokens": 163667120,
-      "uncached_input_tokens": 4975895
+      "total_tokens": 167333625,
+      "uncached_input_tokens": 5150236
     },
     "OpenAI Codex": {
       "cache_hit_ratio": 0.7502,
@@ -148,6 +148,7 @@
     "06d12d574d8b5f23",
     "076c3997fa71e557",
     "079edd6f9c92fa1c",
+    "08187b5f348aa9cf",
     "089c64d674e5aae1",
     "08dfbffcfcc715da",
     "0938aea2ab7b5162",
@@ -181,6 +182,7 @@
     "1149962b99bf46d9",
     "12161cac87a4fdd7",
     "1257d02de811376b",
+    "1287cb118587e8fb",
     "12aa0b809c829ec4",
     "13c3757583f0e938",
     "13c77589471ddac4",
@@ -191,23 +193,21 @@
     "163fb082731e3a22",
     "16a8055d9e7e4f79",
     "173bf31686f9cd5e",
-    "17a98da3c099139f",
-    "19531ab0863015ba",
-    "1a4550be4a39a651"
+    "17a98da3c099139f"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 5017207,
-      "input_tokens": 168201,
-      "output_tokens": 38170,
+      "cache_read": 5467099,
+      "input_tokens": 176026,
+      "output_tokens": 40532,
       "reasoning": 0
     },
     "Claude Code": {
-      "cache_creation": 4975077,
-      "cache_read": 158372214,
-      "input_tokens": 818,
-      "output_tokens": 319011,
+      "cache_creation": 5149382,
+      "cache_read": 161845649,
+      "input_tokens": 854,
+      "output_tokens": 337740,
       "reasoning": 0
     },
     "OpenAI Codex": {
@@ -219,10 +219,10 @@
     }
   },
   "totals": {
-    "cache_creation": 4975077,
-    "cache_read": 165784557,
-    "input_tokens": 966677,
-    "output_tokens": 365052,
+    "cache_creation": 5149382,
+    "cache_read": 169707884,
+    "input_tokens": 974538,
+    "output_tokens": 386143,
     "reasoning": 865
   }
 }
