@@ -9,15 +9,15 @@
     "reasoning": 0
   },
   "exact": {
-    "cache_creation": 8737237,
-    "cache_read": 98050804,
-    "input_tokens": 804,
-    "output_tokens": 95039,
+    "cache_creation": 8887771,
+    "cache_read": 98348444,
+    "input_tokens": 810,
+    "output_tokens": 95908,
     "reasoning": 0
   },
-  "generated_at": "2026-11-20T07:03:45-05:00",
+  "generated_at": "2026-11-20T11:01:50-05:00",
   "generated_by": "claude-cli",
-  "invocations": 403,
+  "invocations": 406,
   "machine": "blade1tb",
   "models": {
     "<synthetic>": {
@@ -42,24 +42,24 @@
       "reasoning": 0
     },
     "claude-sonnet-5-5": {
-      "cache_creation": 3051087,
-      "cache_read": 28445639,
-      "input_tokens": 262,
-      "output_tokens": 25692,
+      "cache_creation": 3201621,
+      "cache_read": 28743279,
+      "input_tokens": 268,
+      "output_tokens": 26561,
       "reasoning": 0
     }
   },
   "partial": true,
   "provider_stats": {
     "Claude Code": {
-      "cache_hit_ratio": 0.9182,
-      "cache_write_tokens": 8737237,
-      "distinct_sessions": 14,
+      "cache_hit_ratio": 0.9171,
+      "cache_write_tokens": 8887771,
+      "distinct_sessions": 15,
       "peak_context_used_percent": 0.0,
       "plan_types": [],
       "rate_limits": {},
-      "total_tokens": 106883884,
-      "uncached_input_tokens": 8738041
+      "total_tokens": 107332933,
+      "uncached_input_tokens": 8888581
     }
   },
   "schema": 3,
@@ -131,18 +131,18 @@
   ],
   "sources": {
     "Claude Code": {
-      "cache_creation": 8737237,
-      "cache_read": 98050804,
-      "input_tokens": 804,
-      "output_tokens": 95039,
+      "cache_creation": 8887771,
+      "cache_read": 98348444,
+      "input_tokens": 810,
+      "output_tokens": 95908,
       "reasoning": 0
     }
   },
   "totals": {
-    "cache_creation": 8737237,
-    "cache_read": 98050804,
-    "input_tokens": 804,
-    "output_tokens": 95039,
+    "cache_creation": 8887771,
+    "cache_read": 98348444,
+    "input_tokens": 810,
+    "output_tokens": 95908,
     "reasoning": 0
   }
 }
