@@ -3,49 +3,56 @@
   "date": "2026-11-19",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 155191,
-    "input_tokens": 66521,
-    "output_tokens": 1590,
+    "cache_read": 255843,
+    "input_tokens": 91925,
+    "output_tokens": 2755,
     "reasoning": 0
   },
   "exact": {
-    "cache_creation": 1438387,
-    "cache_read": 146243691,
-    "input_tokens": 992,
-    "output_tokens": 198093,
+    "cache_creation": 1513891,
+    "cache_read": 193162368,
+    "input_tokens": 1156,
+    "output_tokens": 245549,
     "reasoning": 0
   },
-  "generated_at": "2026-11-19T21:52:34-05:00",
+  "generated_at": "2026-11-20T01:58:38-05:00",
   "generated_by": "claude-cli",
-  "invocations": 511,
+  "invocations": 616,
   "machine": "phoebus",
   "models": {
+    "<synthetic>": {
+      "cache_creation": 0,
+      "cache_read": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "reasoning": 0
+    },
     "claude-opus-5-5": {
-      "cache_creation": 1438387,
-      "cache_read": 146243691,
-      "input_tokens": 992,
-      "output_tokens": 198093,
+      "cache_creation": 1513891,
+      "cache_read": 193162368,
+      "input_tokens": 1156,
+      "output_tokens": 245549,
       "reasoning": 0
     },
     "gemini-3-flash-preview (estimated)": {
       "cache_creation": 0,
-      "cache_read": 155191,
-      "input_tokens": 66521,
-      "output_tokens": 1590,
+      "cache_read": 255843,
+      "input_tokens": 91925,
+      "output_tokens": 2755,
       "reasoning": 0
     }
   },
-  "partial": true,
+  "partial": false,
   "provider_stats": {
     "Claude Code": {
-      "cache_hit_ratio": 0.9903,
-      "cache_write_tokens": 1438387,
+      "cache_hit_ratio": 0.9922,
+      "cache_write_tokens": 1513891,
       "distinct_sessions": 4,
       "peak_context_used_percent": 0.0,
       "plan_types": [],
       "rate_limits": {},
-      "total_tokens": 147881163,
-      "uncached_input_tokens": 1439379
+      "total_tokens": 194922964,
+      "uncached_input_tokens": 1515047
     }
   },
   "schema": 3,
@@ -59,7 +66,9 @@
     "027e7dcc78e8a9a2",
     "03fe8da71892df81",
     "046b01b32ec30f14",
+    "047450c8be6bd7f0",
     "049b3eca9806e416",
+    "04db3fe71f60280c",
     "0506c343e28f67b6",
     "0521fa7ab5910778",
     "0595004912052fc2",
@@ -67,6 +76,7 @@
     "067a1abc76abc911",
     "06d4a581e8cf4576",
     "07b96419d8379c2e",
+    "07c0df22fe541ac6",
     "07d6a1b739d7853c",
     "08085964645c28e8",
     "0832ba5a6957e170",
@@ -89,6 +99,7 @@
     "0e1b14378c075498",
     "0f4ee294e6f54d2b",
     "0fb11845ad901b6a",
+    "1006b230152a1d50",
     "1025c101d3348b1b",
     "103d021813f9a3ca",
     "10500aa281e7d51e",
@@ -96,46 +107,42 @@
     "10de3e8b82d43647",
     "10f19a1c90ab5f76",
     "120a4b1290e81a7e",
+    "125ee6f82a0d0773",
     "126be8196b8f5ec7",
     "12a1af3069c6d9ac",
     "12ba8a24fe39ec40",
     "12f2ac74165ec64f",
     "13a5c43bd742fb68",
+    "13fbab66479dfe0e",
     "14ee3be7a198f44b",
     "14fc526682033afc",
     "15b7546498406562",
     "163d4e2acf299dc5",
     "1641cf1bbf7fa2f2",
     "16ca5eeaf2d89674",
-    "17936675cdd5c511",
-    "18bc298662626c82",
-    "18e6426dabce3c19",
-    "1983ab385431aadc",
-    "1a694096f335c2d8",
-    "1b621282b9d8b899",
-    "1b8e63399dd125f1"
+    "17936675cdd5c511"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 155191,
-      "input_tokens": 66521,
-      "output_tokens": 1590,
+      "cache_read": 255843,
+      "input_tokens": 91925,
+      "output_tokens": 2755,
       "reasoning": 0
     },
     "Claude Code": {
-      "cache_creation": 1438387,
-      "cache_read": 146243691,
-      "input_tokens": 992,
-      "output_tokens": 198093,
+      "cache_creation": 1513891,
+      "cache_read": 193162368,
+      "input_tokens": 1156,
+      "output_tokens": 245549,
       "reasoning": 0
     }
   },
   "totals": {
-    "cache_creation": 1438387,
-    "cache_read": 146398882,
-    "input_tokens": 67513,
-    "output_tokens": 199683,
+    "cache_creation": 1513891,
+    "cache_read": 193418211,
+    "input_tokens": 93081,
+    "output_tokens": 248304,
     "reasoning": 0
   }
 }
