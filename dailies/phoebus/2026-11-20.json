@@ -9,15 +9,15 @@
     "reasoning": 0
   },
   "exact": {
-    "cache_creation": 1099474,
-    "cache_read": 144215934,
-    "input_tokens": 452,
-    "output_tokens": 97991,
+    "cache_creation": 1103452,
+    "cache_read": 148990506,
+    "input_tokens": 464,
+    "output_tokens": 99320,
     "reasoning": 0
   },
-  "generated_at": "2026-11-20T22:35:29-05:00",
+  "generated_at": "2026-11-21T02:39:37-05:00",
   "generated_by": "claude-cli",
-  "invocations": 270,
+  "invocations": 276,
   "machine": "phoebus",
   "models": {
     "<synthetic>": {
@@ -28,10 +28,10 @@
       "reasoning": 0
     },
     "claude-opus-5-5": {
-      "cache_creation": 1099474,
-      "cache_read": 144215934,
-      "input_tokens": 452,
-      "output_tokens": 97991,
+      "cache_creation": 1103452,
+      "cache_read": 148990506,
+      "input_tokens": 464,
+      "output_tokens": 99320,
       "reasoning": 0
     },
     "gemini-3-flash-preview (estimated)": {
@@ -42,17 +42,17 @@
       "reasoning": 0
     }
   },
-  "partial": true,
+  "partial": false,
   "provider_stats": {
     "Claude Code": {
-      "cache_hit_ratio": 0.9924,
-      "cache_write_tokens": 1099474,
+      "cache_hit_ratio": 0.9926,
+      "cache_write_tokens": 1103452,
       "distinct_sessions": 2,
       "peak_context_used_percent": 0.0,
       "plan_types": [],
       "rate_limits": {},
-      "total_tokens": 145413851,
-      "uncached_input_tokens": 1099926
+      "total_tokens": 150193742,
+      "uncached_input_tokens": 1103916
     }
   },
   "schema": 3,
@@ -131,18 +131,18 @@
       "reasoning": 0
     },
     "Claude Code": {
-      "cache_creation": 1099474,
-      "cache_read": 144215934,
-      "input_tokens": 452,
-      "output_tokens": 97991,
+      "cache_creation": 1103452,
+      "cache_read": 148990506,
+      "input_tokens": 464,
+      "output_tokens": 99320,
       "reasoning": 0
     }
   },
   "totals": {
-    "cache_creation": 1099474,
-    "cache_read": 144503786,
-    "input_tokens": 46152,
-    "output_tokens": 99814,
+    "cache_creation": 1103452,
+    "cache_read": 149278358,
+    "input_tokens": 46164,
+    "output_tokens": 101143,
     "reasoning": 0
   }
 }
