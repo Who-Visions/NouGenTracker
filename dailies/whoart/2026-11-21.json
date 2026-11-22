@@ -1,0 +1,162 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-21",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 188846,
+    "input_tokens": 153398,
+    "output_tokens": 17833,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 4226896,
+    "cache_read": 129142638,
+    "input_tokens": 955,
+    "output_tokens": 177314,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-22T03:06:27-05:00",
+  "generated_by": "antigravity",
+  "invocations": 452,
+  "machine": "whoart",
+  "models": {
+    "<synthetic>": {
+      "cache_creation": 0,
+      "cache_read": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "reasoning": 0
+    },
+    "Gemini 4 Hydrogen (Medium) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 188846,
+      "input_tokens": 153398,
+      "output_tokens": 17833,
+      "reasoning": 0
+    },
+    "claude-haiku-5-5": {
+      "cache_creation": 903004,
+      "cache_read": 24136739,
+      "input_tokens": 140,
+      "output_tokens": 43718,
+      "reasoning": 0
+    },
+    "claude-opus-5-5": {
+      "cache_creation": 1826915,
+      "cache_read": 54639515,
+      "input_tokens": 519,
+      "output_tokens": 56809,
+      "reasoning": 0
+    },
+    "claude-sonnet-5-5": {
+      "cache_creation": 1496977,
+      "cache_read": 50366384,
+      "input_tokens": 296,
+      "output_tokens": 76787,
+      "reasoning": 0
+    }
+  },
+  "partial": false,
+  "provider_stats": {
+    "Claude Code": {
+      "cache_hit_ratio": 0.9683,
+      "cache_write_tokens": 4226896,
+      "distinct_sessions": 14,
+      "peak_context_used_percent": 0.0,
+      "plan_types": [],
+      "rate_limits": {},
+      "total_tokens": 133547803,
+      "uncached_input_tokens": 4227851
+    }
+  },
+  "schema": 3,
+  "sketch": [
+    "00db66b48c9a9a17",
+    "0134b076ff0e8d9e",
+    "013fbdc2f3157c9d",
+    "01c7be27cc3b7c41",
+    "022b5d25ed37646b",
+    "022d5546d794f617",
+    "0292cd061f093e83",
+    "02aa204f6107cb16",
+    "0331b5d4c04cb696",
+    "03e4b7a33687b4aa",
+    "040e8866fd64d42e",
+    "04791c1824e0ce30",
+    "0493dcfab4b5795c",
+    "04ec74ec9ca62f6b",
+    "05a9bcb0382ea69c",
+    "05ec93b50f190d31",
+    "07db570ee60b693b",
+    "080a2a1d9e7092dc",
+    "0a3eddcc17869c82",
+    "0a7bcb0adf307e2b",
+    "0b1860f39e4d12af",
+    "0c251bbdd48054bc",
+    "0cc548e21e5527da",
+    "0d18d0e04fb3dfa7",
+    "0e9b05846ca86338",
+    "0ebcafef90c9a7a7",
+    "0f97941567ce0566",
+    "107c948fe163c579",
+    "111216a80efb7bec",
+    "11a9fc6b56c919a7",
+    "11aa335617480564",
+    "11addb6be03b86f6",
+    "12421c6d39099e9a",
+    "12ff045375d66e6b",
+    "13fa17d2ab6f605e",
+    "140a0a38b25b0461",
+    "150a050fcbc158a7",
+    "153bfceda852eff5",
+    "15f6ef43eb8132d5",
+    "1769ceb9541ea548",
+    "18f4b51177aa00ce",
+    "18f9ea3d53ab3128",
+    "19be117868110619",
+    "1a43fca67204b720",
+    "1a8f78d29486dcd1",
+    "1b19e5880de23788",
+    "1b211316f210e637",
+    "1b321b43ba126f4a",
+    "1bd70459ca857d47",
+    "1c985b88a65bcca9",
+    "1d74498e4542f55d",
+    "1da7fcb0cf4e0bbd",
+    "1de3582193da0e17",
+    "1de862c82f15f1d5",
+    "1ec933fd8fdc62d8",
+    "1f5f7188ae288f52",
+    "20a28c146a1d7d20",
+    "20b1373f93f5942b",
+    "21fc4544069b7fb6",
+    "223ac2b569e1e6e1",
+    "22414048fe11b601",
+    "227fed4cb57930bb",
+    "243d3fa8025d995c",
+    "245d0f98d569b7ee"
+  ],
+  "sources": {
+    "Antigravity (Fallback)": {
+      "cache_creation": 0,
+      "cache_read": 188846,
+      "input_tokens": 153398,
+      "output_tokens": 17833,
+      "reasoning": 0
+    },
+    "Claude Code": {
+      "cache_creation": 4226896,
+      "cache_read": 129142638,
+      "input_tokens": 955,
+      "output_tokens": 177314,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 4226896,
+    "cache_read": 129331484,
+    "input_tokens": 154353,
+    "output_tokens": 195147,
+    "reasoning": 0
+  }
+}
