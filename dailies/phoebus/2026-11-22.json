@@ -1,0 +1,104 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-22",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 296747,
+    "cache_read": 21516824,
+    "input_tokens": 84,
+    "output_tokens": 15636,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-22T03:05:12-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 41,
+  "machine": "phoebus",
+  "models": {
+    "claude-opus-5-5": {
+      "cache_creation": 296747,
+      "cache_read": 21516824,
+      "input_tokens": 84,
+      "output_tokens": 15636,
+      "reasoning": 0
+    }
+  },
+  "partial": true,
+  "provider_stats": {
+    "Claude Code": {
+      "cache_hit_ratio": 0.9864,
+      "cache_write_tokens": 296747,
+      "distinct_sessions": 2,
+      "peak_context_used_percent": 0.0,
+      "plan_types": [],
+      "rate_limits": {},
+      "total_tokens": 21829291,
+      "uncached_input_tokens": 296831
+    }
+  },
+  "schema": 3,
+  "sketch": [
+    "0204abd469475a6a",
+    "024d549cf3cc26c1",
+    "0c9eee33ba731c22",
+    "0fb1f7daa130dd3d",
+    "1d72cc71206f5cc9",
+    "2109167bd4a9df2d",
+    "3087dee63b714349",
+    "31d34c555bbd0502",
+    "3298347778ab26a8",
+    "3388bf6d95d7ec9d",
+    "4424229a65a66056",
+    "465a4c07acfc3160",
+    "483bf52cd1357aef",
+    "4f309899e1e17410",
+    "6a846af78ec9e0ef",
+    "75bd6240ca06afca",
+    "79b79e002ecb9f4a",
+    "8a95313c544435d3",
+    "8ed3dfde69e35960",
+    "958c7655c0483df9",
+    "aa253ec621921cd3",
+    "acc4623f21f69aef",
+    "b11a0b63c90d2f5e",
+    "b3b1a20dd660fd0a",
+    "b7fb53dce35ade96",
+    "ba5a976d325334d6",
+    "bb5675c958b75592",
+    "c3cdaec4d28825b9",
+    "c946f5502915e929",
+    "d5093b10821b6554",
+    "d8be75e0e568bc0e",
+    "d9819e87e941dbcd",
+    "d9b130b80bb8c4b5",
+    "dcac8d30ce3949cf",
+    "e20ad076bd5d5060",
+    "e8e7a7a030c0be28",
+    "f18b2ce5675e0e72",
+    "f2a8329f691f745a",
+    "f3feb6818857e9d7",
+    "fda2bb6932d44673",
+    "ff305e898401ba3b"
+  ],
+  "sources": {
+    "Claude Code": {
+      "cache_creation": 296747,
+      "cache_read": 21516824,
+      "input_tokens": 84,
+      "output_tokens": 15636,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 296747,
+    "cache_read": 21516824,
+    "input_tokens": 84,
+    "output_tokens": 15636,
+    "reasoning": 0
+  }
+}
