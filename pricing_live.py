@@ -166,6 +166,7 @@ CLAUDE_CACHE_RATIO_BY_FAMILY = {
     "fable-5.1": 0.025,
     "mythos-5.1": 0.025,
     "opus-5.5": 0.05,
+    "sonnet-5.5": 0.05,
 }
 
 
