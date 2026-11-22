@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the fleet dashboard's summary from the committed dailies.
 
-This is the re-cut of blade1tb's relay work (PR #1). The relay transport
+This is the re-cut of the earlier relay work (PR #1). The relay transport
 itself — rollup files pushed to a side branch — is superseded: the dailies
 under ``dailies/<machine>/`` travel with the repo and are already the fleet's
 shared record. What was worth rescuing is the page (``dashboard.py``, kept

@@ -1,0 +1,255 @@
+{
+ "mesh_version": "1",
+ "repo": "tracker",
+ "schema": "nougen-tools/1",
+ "service": "tracker",
+ "tools": [
+  {
+   "args": {
+    "additionalProperties": false,
+    "properties": {
+     "days": {
+      "description": "days back; omit for all published history",
+      "maximum": 3650,
+      "minimum": 1,
+      "type": "integer"
+     }
+    },
+    "type": "object"
+   },
+   "description": "Totals across EVERY machine that has published, with per-machine spend. Use for 'the whole fleet', 'all my computers', or when comparing machines.",
+   "entry": "nougen_usage_mcp:mesh_fleet_token_usage",
+   "name": "fleet_token_usage",
+   "pythonpath": [
+    "integrations",
+    "."
+   ],
+   "transport": "python"
+  },
+  {
+   "args": {
+    "additionalProperties": false,
+    "properties": {
+     "days": {
+      "description": "days back from now (default 7)",
+      "maximum": 3650,
+      "minimum": 1,
+      "type": "integer"
+     }
+    },
+    "type": "object"
+   },
+   "description": "Every AI lane on THIS machine \u2014 Claude Code, Antigravity, Codex, Gemini CLI and the local Ollama fleet \u2014 plus the shadow bill. Use for 'what has this computer spent'.",
+   "entry": "nougen_usage_mcp:mesh_machine_token_usage",
+   "name": "machine_token_usage",
+   "pythonpath": [
+    "integrations",
+    "."
+   ],
+   "transport": "python"
+  },
+  {
+   "args": {
+    "additionalProperties": false,
+    "properties": {
+     "days": {
+      "description": "days back from now (default 7)",
+      "maximum": 3650,
+      "minimum": 1,
+      "type": "integer"
+     }
+    },
+    "type": "object"
+   },
+   "description": "How many tokens THIS CLI has used, by day. Use when asked 'how many tokens have I used', 'what have I spent', or about your own consumption. Never answer such a question by estimating from conversation length \u2014 call this.",
+   "entry": "nougen_usage_mcp:mesh_my_token_usage",
+   "name": "my_token_usage",
+   "pythonpath": [
+    "integrations",
+    "."
+   ],
+   "transport": "python"
+  },
+  {
+   "args": {
+    "additionalProperties": false,
+    "properties": {
+     "days": {
+      "description": "days back from now (default 7)",
+      "maximum": 3650,
+      "minimum": 1,
+      "type": "integer"
+     }
+    },
+    "type": "object"
+   },
+   "description": "Spend broken down by model at first-party list prices. Use for 'which model is costing the most'.",
+   "entry": "nougen_usage_mcp:mesh_token_cost_by_model",
+   "name": "token_cost_by_model",
+   "pythonpath": [
+    "integrations",
+    "."
+   ],
+   "transport": "python"
+  },
+  {
+   "args": {
+    "additionalProperties": false,
+    "properties": {},
+    "type": "object"
+   },
+   "description": "Tracker location, how it was resolved, cache settings, and which lanes are estimated rather than measured. Use when a figure looks wrong or needs sourcing.",
+   "entry": "nougen_usage_mcp:mesh_token_usage_provenance",
+   "name": "token_usage_provenance",
+   "pythonpath": [
+    "integrations",
+    "."
+   ],
+   "transport": "python"
+  },
+  {
+   "args": {
+    "additionalProperties": false,
+    "properties": {
+     "stale_after_days": {
+      "description": "maximum acceptable age of the latest daily (default 2)",
+      "maximum": 365,
+      "minimum": 0,
+      "type": "integer"
+     }
+    },
+    "type": "object"
+   },
+   "description": "Check whether expected machines have recently published aggregate dailies. This bounded metadata-only path never scans raw logs, writes files, starts the tracker, or uses the network. It reports freshness only, never token usage.",
+   "entry": "nougen_usage_mcp:mesh_tracker_live_status",
+   "name": "tracker_live_status",
+   "pythonpath": [
+    "integrations",
+    "."
+   ],
+   "transport": "python"
+  },
+  {
+   "args": {
+    "additionalProperties": false,
+    "properties": {
+     "as_of": {
+      "description": "ISO date or timezone-aware datetime",
+      "type": "string"
+     },
+     "end": {
+      "description": "Inclusive ISO date, required for RANGE",
+      "type": "string"
+     },
+     "group_by": {
+      "enum": [
+       "machine",
+       "model"
+      ],
+      "type": "string"
+     },
+     "machine": {
+      "description": "Required for machine scope; forbidden for fleet",
+      "type": "string"
+     },
+     "period": {
+      "enum": [
+       "YTD",
+       "MTD",
+       "LATEST",
+       "RANGE"
+      ],
+      "type": "string"
+     },
+     "prove": {
+      "description": "Include source artifact IDs and SHA-256 hashes",
+      "type": "boolean"
+     },
+     "scope": {
+      "enum": [
+       "fleet",
+       "machine"
+      ],
+      "type": "string"
+     },
+     "start": {
+      "description": "Inclusive ISO date, required for RANGE",
+      "type": "string"
+     },
+     "timezone": {
+      "default": "America/New_York",
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "description": "One-call token usage query for YTD, MTD, latest day or an explicit date range. Automatically reads every expected machine's published daily records, computes integer activity totals, and returns an observed floor with total=null when any machine-day is missing, partial or malformed. Use for natural requests such as 'add up all machine tokens YTD'; use prove=true to include SHA-256 provenance.",
+   "entry": "nougen_usage_mcp:mesh_tracker_query",
+   "name": "tracker_query",
+   "pythonpath": [
+    "integrations",
+    "."
+   ],
+   "transport": "python"
+  },
+  {
+   "args": {
+    "properties": {
+     "cached_tokens": {
+      "default": 0,
+      "type": "integer"
+     },
+     "input_tokens": {
+      "default": 0,
+      "type": "integer"
+     },
+     "lane": {
+      "default": null,
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "model": {
+      "type": "string"
+     },
+     "output_tokens": {
+      "default": 0,
+      "type": "integer"
+     },
+     "provider": {
+      "type": "string"
+     },
+     "reasoning_tokens": {
+      "default": 0,
+      "type": "integer"
+     },
+     "source": {
+      "default": "fleet",
+      "type": "string"
+     },
+     "timestamp": {
+      "default": null,
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    },
+    "required": [
+     "provider",
+     "model"
+    ],
+    "type": "object"
+   },
+   "description": "Append one token-usage row to this box's fleet ledger (never raises; no text, no secrets)",
+   "entry": "fleet.fleet_usage_log:log_fleet_usage",
+   "name": "log_fleet_usage",
+   "pythonpath": [
+    "."
+   ],
+   "transport": "python"
+  }
+ ],
+ "version": "2.1.0"
+}

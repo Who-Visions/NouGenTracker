@@ -233,7 +233,7 @@ def validate_live_price(key: str, inp: float, out: float, cache_read: float) -> 
     # (fable-5.1 / mythos-5.1) lists cache_read at 0.025 x input. A gate that
     # hard-coded 0.10 rejected those rows outright, which left every day with
     # Fable 5.1 usage unpriceable and the fleet report at 0 machines
-    # (2026-09-21, hyperion follow-ups 3+4). Widening the tolerance would
+    # (2026-09-21, follow-ups 3+4). Widening the tolerance would
     # weaken the guard for every model; a per-family expectation does not.
     if "claude" in key.lower():
         tol_env = os.environ.get("NOUGEN_PRICING_RATIO_TOL", "0.02")

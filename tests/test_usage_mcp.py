@@ -36,6 +36,8 @@ def _load(monkeypatch, tmp_path, report=FLEET_REPORT):
     """A fresh module with the tracker stubbed and the cache redirected."""
     monkeypatch.setenv("NOUGEN_USAGE_CACHE_DIR", str(tmp_path / "cache"))
     monkeypatch.setenv("NOUGENTRACKER_DIR", str(tmp_path))
+    # The fleet these fixtures publish for; a real box gets its list from the mesh.
+    monkeypatch.setenv("NOUGENTRACKER_EXPECTED_MACHINES", "blade1tb,phoebus,whoart")
     (tmp_path / "token_tracker.py").write_text("# stub", encoding="utf-8")
     spec = importlib.util.spec_from_file_location("nougen_usage_mcp", MODULE)
     mod = importlib.util.module_from_spec(spec)
@@ -382,33 +384,36 @@ def test_provenance_does_not_create_cache_directory(monkeypatch, tmp_path):
 def test_tracker_probe_skips_an_untraversable_mount(monkeypatch, tmp_path):
     mod = _load(monkeypatch, tmp_path)
     monkeypatch.delenv("NOUGENTRACKER_DIR")
-    outpost = tmp_path / "Outpost" / "NouGenTracker"
-    outpost.mkdir(parents=True)
-    (outpost / "token_tracker.py").write_text("# tracker", encoding="utf-8")
-    monkeypatch.setattr(mod.Path, "home", lambda: tmp_path)
+    mount = tmp_path / "mount" / "NouGenTracker"
+    mirror = tmp_path / "home" / ".nougen" / "tracker"
+    mirror.mkdir(parents=True)
+    (mirror / "token_tracker.py").write_text("# tracker", encoding="utf-8")
+    monkeypatch.setenv("NOUGEN_ROOT", str(tmp_path / "home" / ".nougen"))
+    monkeypatch.setattr(mod.mesh, "repo_dir", lambda name, near=None: mount)
     original_exists = mod.Path.exists
 
     def flaky_exists(path):
-        if "Watchtower" in path.parts:
+        if "mount" in path.parts:
             raise OSError("untrusted mount point")
         return original_exists(path)
 
     monkeypatch.setattr(mod.Path, "exists", flaky_exists)
-    assert mod.tracker_dir() == outpost
+    assert mod.tracker_dir() == mirror
 
 
 def test_machine_checkout_takes_precedence_over_managed_mirror(
         monkeypatch, tmp_path):
     mod = _load(monkeypatch, tmp_path)
     monkeypatch.delenv("NOUGENTRACKER_DIR")
-    watchtower = tmp_path / "Watchtower" / "NouGen" / "NouGenTracker"
-    mirror = tmp_path / ".nougen" / "tracker"
-    for root in (watchtower, mirror):
+    checkout = tmp_path / "repos" / "NouGenTracker"
+    mirror = tmp_path / "home" / ".nougen" / "tracker"
+    for root in (checkout, mirror):
         root.mkdir(parents=True)
         (root / "token_tracker.py").write_text("# tracker", encoding="utf-8")
-    monkeypatch.setattr(mod.Path, "home", lambda: tmp_path)
+    monkeypatch.setenv("NOUGEN_ROOT", str(tmp_path / "home" / ".nougen"))
+    monkeypatch.setenv("NOUGEN_TRACKER_DIR", str(checkout))
 
-    assert mod.tracker_dir() == watchtower
+    assert mod.tracker_dir() == checkout
 
 
 # --- failure behaviour ------------------------------------------------------

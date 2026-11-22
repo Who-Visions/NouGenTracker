@@ -112,10 +112,10 @@ UNSTAMPED = "unstamped"
 #: still match — while never being mistaken for a version anyone can check out.
 #:
 #: HISTORICAL NOTE, because the comment here used to assert the opposite: this
-#: marker was introduced on the theory that whoart's 71aef8ff08fa came from an
-#: uncommitted tree, since no commit reproduced it on phoebus. That was wrong.
+#: marker was introduced on the theory that one box's 71aef8ff08fa came from an
+#: uncommitted tree, since no commit reproduced it on another. That was wrong.
 #: The two boxes ran different Pythons and the digest was interpreter-sensitive
-#: (see _canonical). whoart's tree was clean; so was phoebus's. The mechanism is
+#: (see _canonical). Both trees were clean. The mechanism is
 #: still right and still earns its place — but the case it catches is rare, not
 #: the routine explanation for a counter mismatch. Suspect the interpreter first.
 DIRTY_SUFFIX = "+dirty"
@@ -176,8 +176,8 @@ def unintroduced_machine_warning(
     """Flag a machine name the fleet has never seen. None if fine.
 
     This is the check that stops one box from being counted twice under two
-    names. NouGenRelay learned it the hard way: `who-mac-mini`, `phoebus` and
-    `kushboygroups-mac-mini-local` are all the same Mac, and a hostname change
+    names. NouGenRelay learned it the hard way: a short alias, a fleet name and
+    the full `.local` hostname were all the same Mac, and a hostname change
     is enough to fork a machine's history in two. Totals summed across a split
     identity are wrong in the direction that looks plausible, which is the
     worst direction to be wrong in.
@@ -189,7 +189,7 @@ def unintroduced_machine_warning(
     # `known` MUST be sampled before the export writes anything. export_days()
     # creates dailies/<machine>/ for the name it is exporting under, so a
     # caller that reads the directory afterwards always finds the new machine
-    # already "known" and this function can never fire. Measured on phoebus
+    # already "known" and this function can never fire. Measured on one box
     # 2026-09-04: an export under the hostname silently forked a fourth
     # machine series and the warning did not appear, because by the time it
     # was consulted the fork it was meant to announce had already happened.

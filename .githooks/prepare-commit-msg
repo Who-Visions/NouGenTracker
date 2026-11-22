@@ -21,8 +21,8 @@
 #
 # 1. AN EXISTING TRAILER IS NEVER OVERWRITTEN. This hook re-runs on every
 #    commit a rebase or cherry-pick replays, with the REPLAYING machine's
-#    environment. Measured 2026-07-31: `git rebase origin/main` on blade
-#    rewrote a commit stamped `phoebus` / `claude-cli` into `blade1tb` /
+#    environment. Measured 2026-07-31: `git rebase origin/main` on one box
+#    rewrote a commit stamped `<other box>` / `claude-cli` into `<this box>` /
 #    `unknown-agent` — one command silently reattributed another machine's work
 #    and lost the lane. The trailer records who WROTE the commit, so the env is
 #    only ever used to fill a blank.

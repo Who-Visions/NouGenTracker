@@ -6,8 +6,8 @@ token counts into the canonical ledger.
 Every value here is a documented default that the environment can override,
 and the ledger path is derived from the vault location rather than written in.
 NOUGEN_VAULT_DIR is the same variable the rest of the fleet reads; when it is
-absent the path falls back to a per-user directory, never to another machine's
-layout.
+absent the ledger goes to this checkout's vault/, the path token_tracker.py
+reads by default, never to another machine's layout.
 """
 import os
 import sys
@@ -15,7 +15,7 @@ import sys
 _UPSTREAM_PORT = os.environ.get("FLEET_OLLAMA_UPSTREAM_PORT", "11436")
 _VAULT = os.environ.get(
     "NOUGEN_VAULT_DIR",
-    os.path.join(os.path.expanduser("~"), "Watchtower", "vault"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vault"),
 )
 
 os.environ.setdefault("FLEET_PROXY_HOST", "0.0.0.0")
