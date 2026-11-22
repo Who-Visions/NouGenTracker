@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """NouGenTracker daily fleet job.
 
-RECONSTRUCTED 2026-09-07. The original wrapper lived only on WhoArt's disk,
+RECONSTRUCTED 2026-09-07. The original wrapper lived only on one box's disk,
 was never tracked by git (`git log --all -- '*run_daily*'` is empty), and
 disappeared between two runs on 2026-09-06. This rebuild follows the behaviour
 documented in the scheduled-task spec; it is committed so the job cannot

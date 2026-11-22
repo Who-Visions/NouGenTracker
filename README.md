@@ -95,11 +95,19 @@ Point your OpenAI-compatible / Ollama clients at the proxy and the local lanes s
 
 ```bash
 python3 token_tracker.py --install-hooks          # once per clone (see below)
-NOUGEN_MACHINE=phoebus python3 token_tracker.py --publish
-git push -u origin dailies/phoebus                # then open a PR
+NOUGEN_MACHINE=my-box python3 token_tracker.py --publish
+git push -u origin dailies/my-box                 # then open a PR
 
 python3 token_tracker.py --fleet                  # totals across every machine
 ```
+
+Which machines are *expected* to publish comes from the NouGen mesh, not from code: this box (`NOUGEN_MACHINE`,
+else its hostname) plus every peer in `~/.nougen/mesh.json` (or the box's existing `fleet_hosts.json`). A peer that
+publishes under a name other than its node name sets `nodes.<node>.machine`. `NOUGENTRACKER_EXPECTED_MACHINES`
+overrides the list. A fresh clone expects only itself. The checkout is found through the mesh too
+(`NOUGENTRACKER_DIR`, `NOUGEN_TRACKER_DIR`, mesh.json `repos.tracker`). `nougen_mesh.py` at the repo root is a
+byte-identical copy of NouGenShards' `mesh.py`; `nougen.tools.json` lists this repo's tools for the other NouGen
+repos and is generated with `python integrations/nougen_usage_mcp.py --manifest`.
 
 Each machine writes only `dailies/<machine>/<YYYY-MM-DD>.json`, so two boxes pushing at once cannot conflict. Re-exporting a day replaces that day's file, so a re-run can never double-count.
 

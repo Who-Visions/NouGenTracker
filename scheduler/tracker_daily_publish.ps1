@@ -1,9 +1,12 @@
-# Export and publish this machine's usage dailies (Windows port of phoebus's
+# Export and publish this machine's usage dailies (Windows port of the POSIX
 # ~/.nougen/bin/tracker_daily_publish.sh).
 #
-# blade had NO scheduler for this: every blade daily up to 2026-09-11 was
-# exported by hand from a Claude session, so nothing was published after the
-# last one ran. Scheduled every 4h by the NouGen-TrackerDaily task.
+# Without a scheduler every daily was exported by hand from a Claude session,
+# so nothing was published after the last one ran. Scheduled every 4h by the
+# NouGen-TrackerDaily task.
+#
+# The commit is made with this box's own git identity (user.name/user.email);
+# the machine name travels in the commit message.
 #
 # Order matters: rebase BEFORE exporting so the export lands on current
 # origin/main. Only yesterday..today are exported -- archived days are never
@@ -15,14 +18,23 @@ $Log = Join-Path $env:USERPROFILE '.nougen\logs\tracker_daily.log'
 New-Item -ItemType Directory -Force (Split-Path $Log) | Out-Null
 function Say($m) { Add-Content -Path $Log -Encoding utf8 -Value ("{0} {1}" -f (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), $m) }
 
-# Resolve the clone instead of hardcoding one box's layout.
+# Resolve the clone through the NouGen mesh instead of hardcoding one box's layout:
+# NOUGENTRACKER_DIR, the dedicated clean clone, NOUGEN_TRACKER_DIR, mesh.json repos.tracker,
+# NOUGEN_REPOS_DIR\NouGenTracker, the checkout this script sits in, then the managed clones.
+$NougenRoot = if ($env:NOUGEN_ROOT) { $env:NOUGEN_ROOT } else { Join-Path $env:USERPROFILE '.nougen' }
+$MeshFile = if ($env:NOUGEN_MESH_FILE) { $env:NOUGEN_MESH_FILE } else { Join-Path $NougenRoot 'mesh.json' }
+$MeshRepo = $null
+if (Test-Path $MeshFile) {
+  try { $r = (Get-Content -Raw $MeshFile | ConvertFrom-Json).repos.tracker; $MeshRepo = if ($r -is [string]) { $r } else { $r.path } } catch { }
+}
 $Candidates = @(
-  "$env:USERPROFILE\.nougen\tracker-publish",   # dedicated clean clone first: work clones carry uncommitted edits that block publishing (blade skipped every run 2026-11-11..13)
-  "$env:USERPROFILE\Watchtower\NouGen\NouGenTracker",
-  "$env:USERPROFILE\Outpost\NouGenTracker",
-  "$env:USERPROFILE\NouGenTools\NouGenTracker",
-  "$env:USERPROFILE\.nougen\nougentracker-live-safe",
-  "$env:USERPROFILE\.nougen\tracker")
+  "$NougenRoot\tracker-publish",   # dedicated clean clone first: work clones carry uncommitted edits that block publishing
+  $env:NOUGEN_TRACKER_DIR,
+  $MeshRepo,
+  $(if ($env:NOUGEN_REPOS_DIR) { Join-Path $env:NOUGEN_REPOS_DIR 'NouGenTracker' }),
+  $(if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent }),
+  "$NougenRoot\nougentracker-live-safe",
+  "$NougenRoot\tracker") | Where-Object { $_ }
 $Repo = $env:NOUGENTRACKER_DIR
 if (-not ($Repo -and (Test-Path "$Repo\.git"))) { $Repo = $Candidates | Where-Object { Test-Path "$_\.git" } | Select-Object -First 1 }
 if (-not $Repo) { Say 'FATAL no tracker clone found'; exit 1 }
@@ -63,7 +75,8 @@ if ($LASTEXITCODE -ne 0) { Say "FAIL: export errored for $Yday..$Today"; exit 1 
 if (-not (git status --porcelain -- "dailies/$Machine")) { Say "no change ($Yday..$Today)"; exit 0 }
 
 git add -- "dailies/$Machine" 2>$null
-git -c user.name="$Machine" -c user.email="whoentertains@gmail.com" commit -q -m "dailies($Machine): scheduled export $Yday..$Today" -m "Machine: $Machine`nAgent: tracker-daily-publish" 2>$null | Out-Null
+git commit -q -m "dailies($Machine): scheduled export $Yday..$Today" -m "Machine: $Machine`nAgent: tracker-daily-publish" 2>$null | Out-Null
+if ($LASTEXITCODE -ne 0) { Say 'FAIL: commit failed (set git user.name and user.email on this box)'; exit 1 }
 
 foreach ($attempt in 1, 2) {
   git push -q origin HEAD:main 2>$null

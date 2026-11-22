@@ -28,9 +28,14 @@ whose provenance was dropped is indistinguishable from one that was invented.
 **stdout belongs to the protocol.** All logging goes to stderr. One stray print
 corrupts the stream and the failure looks like a broken client.
 
-Paths resolve at runtime — ``NOUGENTRACKER_DIR``, then a probe of known checkout
-locations, then an error naming the variable to set. Nothing assumes a drive
-letter or a username.
+Paths resolve at runtime — ``NOUGENTRACKER_DIR``, then the NouGen mesh
+(``NOUGEN_TRACKER_DIR``, mesh.json ``repos``, the checkout this file sits in),
+then the managed clone under the runtime home, then an error naming the
+variable to set. Nothing assumes a drive letter or a username.
+
+The same tools are offered to the rest of the NouGen package through
+``nougen.tools.json`` at the repo root, generated from ``TOOLS`` below with
+``--manifest`` so nothing is registered twice.
 
 Run ``--selftest`` to exercise the whole surface without a client.
 """
@@ -57,6 +62,8 @@ except ModuleNotFoundError:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from tracker_live import (DEFAULT_STALE_AFTER_DAYS, expected_machines,
                               inspect_tracker)
+
+import nougen_mesh as mesh  # noqa: E402  (repo root, put on sys.path by the tracker_live import)
 
 try:
     from tracker_query import tracker_query as query_tracker_dailies
@@ -100,19 +107,17 @@ def tracker_dir() -> Optional[Path]:
     explicit = os.environ.get("NOUGENTRACKER_DIR", "").strip()
     if explicit and _has_tracker(Path(explicit)):
         return Path(explicit)
-    home = Path.home()
     for candidate in (
-        home / "Watchtower" / "NouGen" / "NouGenTracker",
-        home / "The Observatory" / "NouGenTracker",
-        home / "Outpost" / "NouGenTracker",
+        # The mesh: NOUGEN_TRACKER_DIR, mesh.json repos, the checkout this
+        # server sits in, or a sibling under NOUGEN_REPOS_DIR.
+        mesh.repo_dir("tracker", near=__file__),
         # A managed mirror is useful when no machine checkout exists, but it
         # must not shadow the checkout that actually publishes this node.
-        home / ".nougen" / "tracker",
-        home / "NouGenTracker",
+        mesh.home() / "tracker",
         Path.cwd() / "NouGenTracker",
         Path.cwd(),
     ):
-        if _has_tracker(candidate):
+        if candidate is not None and _has_tracker(candidate):
             return candidate
     return None
 
@@ -401,7 +406,7 @@ def tool_provenance() -> Tuple[str, Dict[str, Any]]:
     data = {
         **context,
         "resolved_by": ("NOUGENTRACKER_DIR" if os.environ.get("NOUGENTRACKER_DIR")
-                        else "probe"),
+                        else "mesh"),
         # Reporting the configured path must not create it. Provenance and live
         # status are safe to call from an observe-only session.
         "cache_dir": str(cache_dir(create=False)),
@@ -594,6 +599,57 @@ RESOURCES = [{
                    "the tracker lives on this machine.",
     "mimeType": "application/json",
 }]
+
+
+def _mesh_entry(name: str) -> Callable[..., Dict[str, Any]]:
+    """A plain function for the mesh "python" transport: the same validation
+    and the same tool as the MCP call, returned as one JSON object."""
+    def run(**args: Any) -> Dict[str, Any]:
+        out = call_tool(name, args)
+        return {"text": out["content"][0]["text"], "result": out["structuredContent"]}
+    run.__name__ = f"mesh_{name}"
+    run.__doc__ = TOOLS[name]["description"]
+    return run
+
+
+for _name in TOOLS:
+    globals()[f"mesh_{_name}"] = _mesh_entry(_name)
+
+
+def mesh_manifest() -> Dict[str, Any]:
+    """nougen.tools.json for this repo, generated from TOOLS.
+
+    Every MCP tool is listed as a mesh "python" tool (module:function run in
+    the repo's interpreter), plus the fleet usage ledger writer NouGenOpen
+    calls. Regenerate with ``python integrations/nougen_usage_mcp.py
+    --manifest > nougen.tools.json``.
+    """
+    tools = [{
+        "name": name,
+        "transport": "python",
+        "entry": f"nougen_usage_mcp:mesh_{name}",
+        "pythonpath": ["integrations", "."],
+        "description": " ".join(spec["description"].split()),
+        "args": spec["schema"],
+    } for name, spec in sorted(TOOLS.items())]
+    tools.append({
+        "name": "log_fleet_usage",
+        "transport": "python",
+        "entry": "fleet.fleet_usage_log:log_fleet_usage",
+        "pythonpath": ["."],
+        "description": "Append one token-usage row to this box's fleet ledger (never raises; no text, no secrets)",
+        "args": {"type": "object", "required": ["provider", "model"], "properties": {
+            "provider": {"type": "string"}, "model": {"type": "string"},
+            "input_tokens": {"type": "integer", "default": 0},
+            "output_tokens": {"type": "integer", "default": 0},
+            "cached_tokens": {"type": "integer", "default": 0},
+            "reasoning_tokens": {"type": "integer", "default": 0},
+            "lane": {"type": ["string", "null"], "default": None},
+            "source": {"type": "string", "default": "fleet"},
+            "timestamp": {"type": ["string", "null"], "default": None}}},
+    })
+    return {"schema": mesh.MANIFEST_SCHEMA, "repo": "tracker", "mesh_version": mesh.MESH_VERSION,
+            "version": VERSION, "service": "tracker", "tools": tools}
 
 
 def tool_descriptor(name: str, spec: Dict[str, Any]) -> Dict[str, Any]:
@@ -794,7 +850,7 @@ def selftest() -> int:
           isinstance(out.get("structuredContent"), dict)
           and "estimated_lanes" in out["structuredContent"])
     check("parser reads a machine row",
-          parse_machines("  blade1tb   351,617,109  16,693,84310,905,469,872   "
+          parse_machines("  box-a      351,617,109  16,693,84310,905,469,872   "
                          "$5,552.69")[0]["spend_usd"] == 5552.69)
     check("parser skips counter and FLEET rows",
           parse_machines("  counter abc (current) 1,2 3,4 5,6 $1.00\n"
@@ -930,9 +986,14 @@ def main(argv: Optional[List[str]] = None) -> int:
                              "found on this machine (backs up each config)")
     parser.add_argument("--dry-run", action="store_true",
                         help="with --install, report what would change")
+    parser.add_argument("--manifest", action="store_true",
+                        help="print this repo's nougen.tools.json (generated from TOOLS)")
     parser.add_argument("--version", action="version",
                         version=f"{SERVER_NAME} {VERSION}")
     args = parser.parse_args(argv)
+    if args.manifest:
+        sys.stdout.write(json.dumps(mesh_manifest(), indent=1, sort_keys=True) + "\n")
+        return 0
     if args.selftest:
         return selftest()
     if args.install:

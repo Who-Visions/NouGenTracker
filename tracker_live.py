@@ -13,22 +13,59 @@ import argparse
 import json
 import os
 import re
+import socket
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
+try:
+    import nougen_mesh as mesh  # vendored at the repo root, byte-identical to NouGenShards' mesh.py
+except ModuleNotFoundError:
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import nougen_mesh as mesh
 
-DEFAULT_MACHINES = ("blade1tb", "phoebus", "whoart")
+
 DEFAULT_STALE_AFTER_DAYS = 2
 MAX_RECORD_BYTES = 1_048_576
 _DAY_FILE = re.compile(r"^(\d{4}-\d{2}-\d{2})\.json$")
 _MACHINE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 
 
+def local_machine() -> str:
+    """The name this box publishes dailies under: NOUGEN_MACHINE, else the
+    hostname, slugged exactly as fleet_dailies.resolve_machine does."""
+    raw = os.environ.get("NOUGEN_MACHINE", "").strip()
+    if not raw:
+        try:
+            raw = socket.gethostname()
+        except Exception:
+            raw = ""
+    return re.sub(r"[^a-z0-9]+", "-", raw.lower()).strip("-") or "unknown-machine"
+
+
+def mesh_machines() -> List[str]:
+    """This box plus every peer node the NouGen mesh knows.
+
+    A peer publishes under ``nodes.<name>.machine`` in mesh.json when its
+    machine name differs from its node name, else under the node name. The
+    node this box itself is (mesh.node()) is this machine, not a peer. A
+    fresh clone knows no peers, so it expects only itself.
+    """
+    here = mesh.node()
+    names = {local_machine()}
+    for name, cfg in mesh.nodes().items():
+        if name == here:
+            continue
+        machine = cfg.get("machine") if isinstance(cfg, dict) else None
+        names.add(str(machine or name).strip().lower())
+    return sorted(n for n in names if n)
+
+
 def expected_machines() -> List[str]:
-    """Configured fleet names, with a small canonical local-first default."""
+    """NOUGENTRACKER_EXPECTED_MACHINES when set, else the mesh (see mesh_machines)."""
     raw = os.environ.get("NOUGENTRACKER_EXPECTED_MACHINES", "")
-    values = raw.split(",") if raw.strip() else DEFAULT_MACHINES
+    values = raw.split(",") if raw.strip() else mesh_machines()
     return sorted({value.strip().lower() for value in values if value.strip()})
 
 
@@ -186,18 +223,23 @@ def inspect_tracker(root: Path, machines: Optional[Iterable[str]] = None,
     }
 
 
+def default_checkout() -> Path:
+    """The NouGenTracker checkout to inspect: NOUGENTRACKER_DIR, then the mesh
+    (NOUGEN_TRACKER_DIR, mesh.json repos, NOUGEN_REPOS_DIR), then the managed
+    clones under the runtime home, then this checkout."""
+    explicit = os.environ.get("NOUGENTRACKER_DIR", "").strip()
+    if explicit and Path(explicit).exists():
+        return Path(explicit)
+    here = Path(__file__).resolve().parent
+    candidates = [mesh.repo_dir("tracker"),
+                  mesh.home() / "nougentracker-live-safe",
+                  mesh.home() / "tracker"]
+    return next((c for c in candidates if c is not None and (c / ".git").exists()), here)
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    default_repo = os.environ.get("NOUGENTRACKER_DIR")
-    if not default_repo or not Path(default_repo).exists():
-        candidates = [
-            Path.home() / "Watchtower" / "NouGen" / "NouGenTracker",
-            Path.home() / "Outpost" / "NouGenTracker",
-            Path.home() / ".nougen" / "nougentracker-live-safe",
-            Path.home() / ".nougen" / "tracker",
-            Path(__file__).resolve().parent,
-        ]
-        default_repo = str(next((c for c in candidates if (c / ".git").exists()), Path(__file__).resolve().parent))
+    default_repo = str(default_checkout())
 
     parser.add_argument("--repo", type=Path,
                         default=Path(default_repo),
