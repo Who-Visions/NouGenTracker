@@ -1,40 +1,42 @@
-// NouGen//Trckr. Production on trckr.nougenai.com deploys from the cloud through Cloudflare
-// Workers Builds: deploy command `node deploy/cf_build.mjs`, which finds or makes the D1
-// database, applies migrations and deploys. No machine of Dave's is involved.
+// NouGen//Trckr. The top level is production on trckr.nougenai.com, so the Worker name here
+// (nougen-trckr) matches the Worker Cloudflare Workers Builds deploys. Deploy command:
+// `node deploy/cf_build.mjs`, which applies D1 migrations and deploys. No machine of Dave's is involved.
+// Preview on workers.dev: `npm run deploy:preview` (env.preview).
 //
 // Worker secrets, set once in the Cloudflare dashboard (never in this file):
 //   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET   the fleet's shared Google OAuth client
 //   TRCKR_SIGNING_SECRET                     optional; without it the Worker mints its own and keeps it in D1
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nougen-trckr-preview",
+  "name": "nougen-trckr",
   "main": "src/worker.js",
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": true,
+  "workers_dev": false,
+  "routes": [{ "pattern": "trckr.nougenai.com", "custom_domain": true }],
   "observability": { "enabled": true },
   // Every provider page is re-read every 30 minutes; an unchanged page writes nothing.
   "triggers": { "crons": ["*/30 * * * *"] },
   "d1_databases": [
-    { "binding": "DB", "database_name": "nougen-trckr-preview", "database_id": "REPLACE_WITH_PREVIEW_D1_ID", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "nougen-trckr", "database_id": "bdc6d9b6-f564-4498-9f53-2beaab72b197", "migrations_dir": "migrations" }
   ],
   "vars": {
+    "PUBLIC_BASE_URL": "https://trckr.nougenai.com",
     "TRCKR_ALLOWED_EMAILS": "whoentertains@gmail.com,dave@whovisions.com",
     "TRCKR_TENANT": "nougen"
     // Google returns to this Worker's own /oauth/google/callback. Setting GOOGLE_REDIRECT_URI to Eye's
     // callback instead routes through Eye's "trckr~" relay (Who-Visions/nougeneye CALLBACK_RELAYS).
   },
   "env": {
-    "production": {
-      "name": "nougen-trckr",
-      "workers_dev": false,
-      "routes": [{ "pattern": "trckr.nougenai.com", "custom_domain": true }],
+    "preview": {
+      "name": "nougen-trckr-preview",
+      "workers_dev": true,
+      "routes": [],
       "triggers": { "crons": ["*/30 * * * *"] },
       "d1_databases": [
-        { "binding": "DB", "database_name": "nougen-trckr", "database_id": "bdc6d9b6-f564-4498-9f53-2beaab72b197", "migrations_dir": "migrations" }
+        { "binding": "DB", "database_name": "nougen-trckr-preview", "database_id": "REPLACE_WITH_PREVIEW_D1_ID", "migrations_dir": "migrations" }
       ],
       "vars": {
-        "PUBLIC_BASE_URL": "https://trckr.nougenai.com",
         "TRCKR_ALLOWED_EMAILS": "whoentertains@gmail.com,dave@whovisions.com",
         "TRCKR_TENANT": "nougen"
       }

@@ -30,7 +30,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 WORKER = HERE.parent
-ENV = os.environ.get("TRCKR_ENV", "production")
+ENV = os.environ.get("TRCKR_ENV", "")  # "" = top level, which is production
+ENVARGS = ["--env", ENV] if ENV else []
 DB_NAME = os.environ.get("TRCKR_D1_NAME", "nougen-trckr")
 BASE = os.environ.get("TRCKR_BASE_URL", "https://trckr.nougenai.com").rstrip("/")
 EYE_CALLBACK = os.environ.get("TRCKR_EYE_CALLBACK", "https://eye.nougenai.com/oauth/google/callback")
@@ -121,7 +122,7 @@ def ensure_d1(env):
 
 
 def live_version(env, cfg):
-    out = wrangler(["deployments", "list", "--env", ENV, "--json"], env, cfg, check=False)
+    out = wrangler(["deployments", "list", *ENVARGS, "--json"], env, cfg, check=False)
     if out.returncode != 0:
         return None
     try:
@@ -242,16 +243,16 @@ def main():
             prev = json.loads((STATE / "last_deploy.json").read_text()).get("previous_version")
             if not prev:
                 die("no previous version recorded (first deploy); delete the worker instead if needed")
-            wrangler(["rollback", prev, "--env", ENV, "--message", "trckr rollback", "-y"], env, cfg)
+            wrangler(["rollback", prev, *ENVARGS, "--message", "trckr rollback", "-y"], env, cfg)
             log(f"rolled back to {prev}")
             return
 
-        wrangler(["d1", "migrations", "apply", DB_NAME, "--remote", "--env", ENV], env, cfg, stdin="y\n")
+        wrangler(["d1", "migrations", "apply", DB_NAME, "--remote", *ENVARGS], env, cfg, stdin="y\n")
         log("migrations applied")
         prev = live_version(env, cfg)
         log(f"live version before deploy: {prev or 'none (first deploy)'}")
 
-        out = wrangler(["deploy", "--env", ENV], env, cfg)
+        out = wrangler(["deploy", *ENVARGS], env, cfg)
         version = next((ln.split(":", 1)[1].strip() for ln in out.stdout.splitlines() if "Version ID" in ln), None)
         log(f"deployed version {version}")
 
@@ -261,7 +262,7 @@ def main():
         if not km.get(KEYS["google_id"]) or not km.get(KEYS["google_secret"]):
             die(f"Keymaker is missing {KEYS['google_id']} or {KEYS['google_secret']}")
         bulk = json.dumps({"TRCKR_SIGNING_SECRET": signing, "GOOGLE_CLIENT_ID": km[KEYS["google_id"]], "GOOGLE_CLIENT_SECRET": km[KEYS["google_secret"]]})
-        wrangler(["secret", "bulk", "--env", ENV], env, cfg, stdin=bulk)
+        wrangler(["secret", "bulk", *ENVARGS], env, cfg, stdin=bulk)
         log("3 secrets set" + (" (signing secret generated; it is not in the Keymaker)" if generated else ""))
         version = live_version(env, cfg) or version
 

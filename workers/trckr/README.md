@@ -49,10 +49,10 @@ TRCKR_SEED_SAMPLE=1 npm run dev   # http://localhost:8787, D1 on node:sqlite, si
 Production deploys from the cloud through Cloudflare Workers Builds, with no machine of Dave's involved:
 
 1. Cloudflare dashboard, Workers & Pages, Create, Import a repository: `Who-Visions/NouGenTracker`.
-2. Root directory `workers/trckr`, build command empty, deploy command `node deploy/cf_build.mjs`.
+2. Worker name `nougen-trckr`, root directory `workers/trckr`, build command empty, deploy command `node deploy/cf_build.mjs`.
 3. After the first build, Worker `nougen-trckr`, Settings, Variables and Secrets: add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as secrets.
 
-`deploy/cf_build.mjs` uses the token Workers Builds injects to find or create the `nougen-trckr` D1 database, apply migrations and `wrangler deploy --env production`, which binds `trckr.nougenai.com` as a custom domain. Every push to the production branch redeploys. Roll back from the Worker's Deployments tab.
+`deploy/cf_build.mjs` uses the token Workers Builds injects to find or create the `nougen-trckr` D1 database, check `wrangler.jsonc` pins it, apply migrations and `wrangler deploy` (the top level is production), which binds `trckr.nougenai.com` as a custom domain. Every push to the production branch redeploys. Roll back from the Worker's Deployments tab.
 
 From a shell with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` exported, `npm run deploy:cloud` does the same thing. `deploy/deploy_prod.py` is the older Keymaker-node path with a built-in smoke test and rollback.
 

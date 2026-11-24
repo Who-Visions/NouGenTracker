@@ -2,19 +2,17 @@
 // Cloud deploy for NouGen//Trckr, run by Cloudflare Workers Builds as the deploy command.
 // Workers Builds injects CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, so nothing here needs a key.
 //   1. find the production D1 database (nougen-trckr), creating it when missing
-//   2. write .wrangler.deploy.jsonc with the real database id (gitignored)
+//   2. check wrangler.jsonc pins that database id
 //   3. apply migrations to the remote database
-//   4. deploy --env production to trckr.nougenai.com
+//   4. deploy the top level (production) to trckr.nougenai.com
 // It prints no secrets. Run it by hand the same way: `node deploy/cf_build.mjs` with those two vars set.
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DB_NAME = process.env.TRCKR_D1_NAME || 'nougen-trckr';
-const PLACEHOLDER = 'REPLACE_WITH_PROD_D1_ID';
-const TEMP = join(root, '.wrangler.deploy.jsonc');
 const WRANGLER = process.env.TRCKR_WRANGLER || 'wrangler@4';
 
 function wrangler(args, { capture = false } = {}) {
@@ -51,19 +49,10 @@ if (!db?.uuid) {
 console.log(`D1 ${DB_NAME}: ${db.uuid}`);
 
 const config = readFileSync(join(root, 'wrangler.jsonc'), 'utf8');
-if (config.includes(PLACEHOLDER)) {
-  writeFileSync(TEMP, config.replace(PLACEHOLDER, db.uuid));
-} else if (config.includes(db.uuid)) {
-  writeFileSync(TEMP, config); // the id is already pinned in wrangler.jsonc
-} else {
-  console.error(`wrangler.jsonc pins a different D1 id than ${DB_NAME} (${db.uuid}); refusing to guess.`);
+if (!config.includes(`"database_id": "${db.uuid}"`)) {
+  console.error(`wrangler.jsonc does not pin ${DB_NAME} (${db.uuid}); update its top-level database_id and push.`);
   process.exit(1);
 }
-
-try {
-  wrangler(['d1', 'migrations', 'apply', DB_NAME, '--remote', '--env', 'production', '-c', TEMP]);
-  wrangler(['deploy', '--env', 'production', '-c', TEMP]);
-} finally {
-  rmSync(TEMP, { force: true });
-}
+wrangler(['d1', 'migrations', 'apply', DB_NAME, '--remote']);
+wrangler(['deploy']);
 console.log('Trckr deployed: https://trckr.nougenai.com');

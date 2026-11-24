@@ -7,8 +7,8 @@
   "scripts": {
     "test": "node --test --disable-warning=ExperimentalWarning test/*.test.mjs",
     "dev": "node dev/server.mjs",
-    "deploy:preview": "wrangler deploy",
-    "deploy:prod": "wrangler deploy --env production",
+    "deploy:preview": "wrangler deploy --env preview",
+    "deploy:prod": "wrangler deploy",
     "deploy:cloud": "node deploy/cf_build.mjs"
   },
   "engines": { "node": ">=20" }
