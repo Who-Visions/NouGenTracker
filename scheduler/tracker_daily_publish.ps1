@@ -17,12 +17,29 @@ function Say($m) { Add-Content -Path $Log -Encoding utf8 -Value ("{0} {1}" -f (G
 # Single-instance lock: two overlapping runs export into the same clone and one fails.
 $LockPath = Join-Path $env:USERPROFILE '.nougen\logs\tracker_daily.lock'
 $LockStaleMin = [int]($env:NOUGEN_TRACKER_LOCK_STALE_MIN, 60 | Where-Object { $_ } | Select-Object -First 1)
-if (Test-Path $LockPath) {
-  $age = ((Get-Date) - (Get-Item $LockPath).LastWriteTime).TotalMinutes
-  if ($age -lt $LockStaleMin) { Say ("SKIP: another publish run holds the lock ({0:N0} min old)" -f $age); exit 0 }
-  Say ("stale lock ({0:N0} min) removed" -f $age)
+# Atomic acquire: FileMode.CreateNew fails if the file already exists, so two
+# publishers starting together cannot both take the lock (the old Test-Path
+# then Set-Content had a TOCTOU race). On collision, honor a fresh lock and
+# clear + retry once past a stale one.
+$LockAcquired = $false
+for ($attempt = 0; ($attempt -lt 2) -and (-not $LockAcquired); $attempt++) {
+  try {
+    $LockStream = [System.IO.File]::Open($LockPath, [System.IO.FileMode]::CreateNew, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+    $LockWriter = New-Object System.IO.StreamWriter($LockStream)
+    try {
+      $LockWriter.Write($PID)
+      $LockWriter.Flush()
+    } finally { $LockWriter.Dispose() }
+    $LockAcquired = $true
+  } catch [System.IO.IOException] {
+    if (-not (Test-Path $LockPath)) { throw }
+    $age = ((Get-Date) - (Get-Item $LockPath).LastWriteTime).TotalMinutes
+    if ($age -lt $LockStaleMin) { Say ("SKIP: another publish run holds the lock ({0:N0} min old)" -f $age); exit 0 }
+    Say ("stale lock ({0:N0} min) removed" -f $age)
+    Remove-Item -Force -ErrorAction SilentlyContinue $LockPath
+  }
 }
-Set-Content -Path $LockPath -Value $PID
+if (-not $LockAcquired) { Say 'SKIP: could not acquire the lock'; exit 0 }
 function Quit([int]$code) { Remove-Item -Force -ErrorAction SilentlyContinue $LockPath; exit $code }
 trap { Remove-Item -Force -ErrorAction SilentlyContinue $LockPath; break }
 
