@@ -31,7 +31,7 @@
       "routes": [{ "pattern": "trckr.nougenai.com", "custom_domain": true }],
       "triggers": { "crons": ["*/30 * * * *"] },
       "d1_databases": [
-        { "binding": "DB", "database_name": "nougen-trckr", "database_id": "REPLACE_WITH_PROD_D1_ID", "migrations_dir": "migrations" }
+        { "binding": "DB", "database_name": "nougen-trckr", "database_id": "bdc6d9b6-f564-4498-9f53-2beaab72b197", "migrations_dir": "migrations" }
       ],
       "vars": {
         "PUBLIC_BASE_URL": "https://trckr.nougenai.com",

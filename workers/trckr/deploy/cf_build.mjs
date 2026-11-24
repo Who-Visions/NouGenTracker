@@ -51,11 +51,14 @@ if (!db?.uuid) {
 console.log(`D1 ${DB_NAME}: ${db.uuid}`);
 
 const config = readFileSync(join(root, 'wrangler.jsonc'), 'utf8');
-if (!config.includes(PLACEHOLDER)) {
-  console.error(`wrangler.jsonc no longer holds ${PLACEHOLDER}; refusing to guess the database binding.`);
+if (config.includes(PLACEHOLDER)) {
+  writeFileSync(TEMP, config.replace(PLACEHOLDER, db.uuid));
+} else if (config.includes(db.uuid)) {
+  writeFileSync(TEMP, config); // the id is already pinned in wrangler.jsonc
+} else {
+  console.error(`wrangler.jsonc pins a different D1 id than ${DB_NAME} (${db.uuid}); refusing to guess.`);
   process.exit(1);
 }
-writeFileSync(TEMP, config.replace(PLACEHOLDER, db.uuid));
 
 try {
   wrangler(['d1', 'migrations', 'apply', DB_NAME, '--remote', '--env', 'production', '-c', TEMP]);
