@@ -1,0 +1,169 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-17",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 4600453,
+    "input_tokens": 313623,
+    "output_tokens": 53168,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 6752448,
+    "cache_read": 361783751,
+    "input_tokens": 2376,
+    "output_tokens": 724121,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-18T21:09:24-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 1510,
+  "machine": "phoebus",
+  "models": {
+    "<synthetic>": {
+      "cache_creation": 0,
+      "cache_read": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "reasoning": 0
+    },
+    "Gemini 4 Hydrogen (Medium) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 2134867,
+      "input_tokens": 89796,
+      "output_tokens": 29058,
+      "reasoning": 0
+    },
+    "claude-fable-5-2": {
+      "cache_creation": 2396309,
+      "cache_read": 159435958,
+      "input_tokens": 1017,
+      "output_tokens": 401261,
+      "reasoning": 0
+    },
+    "claude-haiku-5-5": {
+      "cache_creation": 721383,
+      "cache_read": 22577925,
+      "input_tokens": 190,
+      "output_tokens": 55630,
+      "reasoning": 0
+    },
+    "claude-opus-5-5": {
+      "cache_creation": 3634756,
+      "cache_read": 179769868,
+      "input_tokens": 1169,
+      "output_tokens": 267230,
+      "reasoning": 0
+    },
+    "gemini-3-flash-preview (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 2465586,
+      "input_tokens": 223827,
+      "output_tokens": 24110,
+      "reasoning": 0
+    }
+  },
+  "partial": false,
+  "provider_stats": {
+    "Claude Code": {
+      "cache_hit_ratio": 0.9817,
+      "cache_write_tokens": 6752448,
+      "distinct_sessions": 9,
+      "peak_context_used_percent": 0.0,
+      "plan_types": [],
+      "rate_limits": {},
+      "total_tokens": 369262696,
+      "uncached_input_tokens": 6754824
+    }
+  },
+  "schema": 3,
+  "sketch": [
+    "002212a07773daa8",
+    "00427ea3d1c85153",
+    "008d438e031870ce",
+    "008f4dd3eea81ad1",
+    "008ffae5754ac811",
+    "00972a203345510a",
+    "00aed71792709271",
+    "012abf856c0dd88d",
+    "0174baf791f0594b",
+    "019d15aba174cddb",
+    "01c795f16d4a1f33",
+    "01d2a23681c97cf3",
+    "01d37d5bfe9063f3",
+    "01f002d008d89648",
+    "02070618bf8c4553",
+    "0268c052bb3dc49e",
+    "028136bfc7fcba56",
+    "02cdcd8b02b1a0e3",
+    "02d452d79996488d",
+    "02df9a9c525ca6fb",
+    "02e68666b1d782f6",
+    "0304ebc4bb48c21a",
+    "031180474642c1c3",
+    "031f2fbf16a3a147",
+    "03491b94919c9744",
+    "034e474529aaa4eb",
+    "035500766d3ce2c6",
+    "0371a2c5fd7926d8",
+    "037ae75bb49fea93",
+    "03b155f420a929c8",
+    "03ea5ff4ab342a1d",
+    "0417fa0ade1f5d36",
+    "047b312592e3dbd1",
+    "0488252b7a060c44",
+    "048f3d567c6d68e1",
+    "04f012b55fff28ac",
+    "054f47aeed2e9863",
+    "058914e2c911e82f",
+    "05dbb184eb176c2e",
+    "0610a1f00900441e",
+    "061423a8c80931f0",
+    "0641af29966935b3",
+    "0733fec22c23fb17",
+    "077e5bd2dbad9cb8",
+    "0798ed28b60c5153",
+    "07d452dd20ac7ab6",
+    "07ffceecc55cf496",
+    "08429d76bae35dec",
+    "0849acc3a9ef2753",
+    "08a6b251e30dea28",
+    "08dbcef3a48a139b",
+    "08e47ff18c7b8212",
+    "091ae83e0867b546",
+    "09231bb459180842",
+    "09441b6cede7488a",
+    "09fdf8aa8c38ca31",
+    "0a223667bc66547f",
+    "0a8561d0bf579661",
+    "0ac1b980cd3f5d02",
+    "0ae227a686363547",
+    "0b1bd4b0166bb49d",
+    "0b36caf64e149c7b",
+    "0b781672cdaf5b62",
+    "0b817dbfd8ff9b0b"
+  ],
+  "sources": {
+    "Antigravity (Fallback)": {
+      "cache_creation": 0,
+      "cache_read": 4600453,
+      "input_tokens": 313623,
+      "output_tokens": 53168,
+      "reasoning": 0
+    },
+    "Claude Code": {
+      "cache_creation": 6752448,
+      "cache_read": 361783751,
+      "input_tokens": 2376,
+      "output_tokens": 724121,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 6752448,
+    "cache_read": 366384204,
+    "input_tokens": 315999,
+    "output_tokens": 777289,
+    "reasoning": 0
+  }
+}

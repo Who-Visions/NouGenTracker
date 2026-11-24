@@ -1,6 +1,7 @@
 """Tests for hardened Gemini Markdoc & HTML pricing parser and temporal schedules."""
 from __future__ import annotations
 
+import datetime
 import json
 from pathlib import Path
 import pytest
@@ -326,15 +327,26 @@ def test_live_cache_does_not_suppress_published_schedule_transitions(monkeypatch
 
     monkeypatch.setattr(pricing_live.urllib.request, "urlopen", fake_urlopen)
 
-    # First resolution triggers live fetch and writes cache including extracted schedules
-    res_today = pricing_live.resolve_price("gemini-4-carbon", when="2026-11-15")
-    assert res_today[:3] == (2.0, 10.0, 0.1)
+    # First resolution triggers live fetch and writes cache including extracted schedules.
+    # The probe date must be today or later: resolve_price only live-fetches for
+    # today-or-future dates (past dates are answered from historical cache by
+    # design), so a hardcoded past date rots the moment the calendar passes it.
+    # The fixture's carbon schedule is (2.0, 10.0, 0.1) through Nov 30, 2026
+    # and (4.0, 20.0, 0.2) from Dec 1, 2026, with no later change.
+    today = datetime.date.today()
+    expected_today = (
+        (2.0, 10.0, 0.1)
+        if today < datetime.date(2026, 12, 1)
+        else (4.0, 20.0, 0.2)
+    )
+    res_today = pricing_live.resolve_price("gemini-4-carbon", when=today.isoformat())
+    assert res_today[:3] == expected_today
 
     # Verify cache persisted schedule bands
     cache_data = json.loads(isolated_pricing_state.read_text(encoding="utf-8"))
     assert "gemini-4-carbon" in cache_data.get("schedules", {})
 
-    # Now query post-transition date directly against the cache written on 2026-11-11:
+    # Now query post-transition date directly against the cache written by the probe above:
     # must NOT return the cached $2/$10/$0.1 snapshot for 2026-12-05!
     res_dec = pricing_live.resolve_price("gemini-4-carbon", when="2026-12-05")
     assert res_dec[:3] == (4.0, 20.0, 0.2)

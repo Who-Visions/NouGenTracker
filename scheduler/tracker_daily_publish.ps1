@@ -28,9 +28,10 @@ trap { Remove-Item -Force -ErrorAction SilentlyContinue $LockPath; break }
 
 # Resolve the clone instead of hardcoding one box's layout.
 $Candidates = @(
-  "$env:USERPROFILE\.nougen\tracker-publish",   # dedicated clean publisher clone first: work clones carry uncommitted edits that block publishing
+  "$env:USERPROFILE\.nougen\tracker-publish",   # dedicated clean publisher clone first: work clones carry uncommitted edits that block publishing (blade skipped every run 2026-11-11..13)
   "$env:USERPROFILE\Watchtower\NouGen\NouGenTracker",
   "$env:USERPROFILE\Outpost\NouGenTracker",
+  "$env:USERPROFILE\NouGenTools\NouGenTracker",
   "$env:USERPROFILE\.nougen\nougentracker-live-safe",
   "$env:USERPROFILE\.nougen\tracker")
 $Repo = $env:NOUGENTRACKER_DIR
@@ -40,7 +41,8 @@ Set-Location $Repo
 
 $Py = @("$env:LOCALAPPDATA\Programs\Python\Python311\python.exe",
         "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe",
-        "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+        "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe",
+        "C:\Python311\python.exe", "C:\Python312\python.exe", "C:\Python313\python.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $Py) { Say 'FATAL no real python.exe (WindowsApps alias does not run under Task Scheduler)'; Quit 1 }
 
 $Machine = (& $Py -c "import fleet_dailies as f; print(f.resolve_machine())" 2>$null | Select-Object -Last 1)

@@ -1,0 +1,176 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-23",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 1064499,
+    "input_tokens": 39946,
+    "output_tokens": 9478,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 9450058,
+    "cache_read": 409631005,
+    "input_tokens": 2048,
+    "output_tokens": 458564,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-24T13:13:55-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 1093,
+  "machine": "phoebus",
+  "models": {
+    "<synthetic>": {
+      "cache_creation": 0,
+      "cache_read": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "reasoning": 0
+    },
+    "Gemini 4 Hydrogen (Medium) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 6501,
+      "input_tokens": 6777,
+      "output_tokens": 245,
+      "reasoning": 0
+    },
+    "Gemini 4 Neon (Low) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 1035799,
+      "input_tokens": 18286,
+      "output_tokens": 9095,
+      "reasoning": 0
+    },
+    "claude-haiku-5-5": {
+      "cache_creation": 1339515,
+      "cache_read": 21767545,
+      "input_tokens": 150,
+      "output_tokens": 15858,
+      "reasoning": 0
+    },
+    "claude-opus-5-5": {
+      "cache_creation": 5989464,
+      "cache_read": 329480648,
+      "input_tokens": 1586,
+      "output_tokens": 364584,
+      "reasoning": 0
+    },
+    "claude-sonnet-5-5": {
+      "cache_creation": 2121079,
+      "cache_read": 58382812,
+      "input_tokens": 312,
+      "output_tokens": 78122,
+      "reasoning": 0
+    },
+    "gemini-3-flash-preview (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 22199,
+      "input_tokens": 14883,
+      "output_tokens": 138,
+      "reasoning": 0
+    }
+  },
+  "partial": false,
+  "provider_stats": {
+    "Claude Code": {
+      "cache_hit_ratio": 0.9774,
+      "cache_write_tokens": 9450058,
+      "distinct_sessions": 9,
+      "peak_context_used_percent": 0.0,
+      "plan_types": [],
+      "rate_limits": {},
+      "total_tokens": 419541675,
+      "uncached_input_tokens": 9452106
+    }
+  },
+  "schema": 3,
+  "sketch": [
+    "004335ab9f680467",
+    "004848e22024ea5f",
+    "004e89338a737641",
+    "005fa83054bc8c21",
+    "009c1d3d68a6e07f",
+    "0132cc030cb51fea",
+    "01f53951ddcda102",
+    "01f819f064933d4f",
+    "0240ec295ae8b04f",
+    "02be6f8adf5f450f",
+    "02e68c2611715c0c",
+    "03024aacd0defa8c",
+    "0360e3df71f7bdba",
+    "04ea10ce913b15dc",
+    "04f2d1c64520e530",
+    "04f8f5d651aeb760",
+    "05408740f284ebaa",
+    "05bab2905f594c68",
+    "0602bf6887ccbdf7",
+    "068f2cffc0793569",
+    "06d4742a9ad252cf",
+    "06ea6863dfe4dc95",
+    "06eb328243a2d8a6",
+    "0700a374a3c443b9",
+    "071631504d67e6f8",
+    "073698fba5605c5e",
+    "074638558de6960f",
+    "07c8e9b2f6bbd1be",
+    "07ed91560e94a256",
+    "0869b21df0a91014",
+    "087798fced4902d9",
+    "08988ea5de189c82",
+    "08f449e84f789d95",
+    "09508e5d926cc127",
+    "095c8de5a28fc078",
+    "096cc12c8fbb14b8",
+    "099c27842626ab4b",
+    "09eec1a1b0641dcd",
+    "0a5bac7a3042d43c",
+    "0a5d508fd7bafe07",
+    "0aae4208c794556e",
+    "0aeda04098480acf",
+    "0b47bb10a9241d9b",
+    "0c27aff2364af4bb",
+    "0c44223d15548bd7",
+    "0c4b993bcd6ebbe6",
+    "0caa382a9d24933d",
+    "0cc82a99b0b8d048",
+    "0cfcfd5e8958eae1",
+    "0cfe80abcc13b118",
+    "0d9c947ec5b98a35",
+    "0ddac347a06a3d58",
+    "0e1d199583e75822",
+    "0e305d755339b4e8",
+    "0e5f328a5e64aff3",
+    "0e76d955d7e798f3",
+    "0efe20669ab4ca26",
+    "0f09ccc827130fab",
+    "0f4310c7cdab1952",
+    "0f862b9f6f8a736d",
+    "0fe3776ff8a8a580",
+    "0ff699b261a07b53",
+    "101f9cc7fef00580",
+    "1089d4c40793f33f"
+  ],
+  "sources": {
+    "Antigravity (Fallback)": {
+      "cache_creation": 0,
+      "cache_read": 1064499,
+      "input_tokens": 39946,
+      "output_tokens": 9478,
+      "reasoning": 0
+    },
+    "Claude Code": {
+      "cache_creation": 9450058,
+      "cache_read": 409631005,
+      "input_tokens": 2048,
+      "output_tokens": 458564,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 9450058,
+    "cache_read": 410695504,
+    "input_tokens": 41994,
+    "output_tokens": 468042,
+    "reasoning": 0
+  }
+}
