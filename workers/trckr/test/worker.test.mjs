@@ -78,7 +78,7 @@ test('full sign-in: Google via Eye relay, consent, PKCE token, then MCP tools', 
   assert.equal(cost.result.structuredContent.cost_usd, 0.04);
   assert.match(cost.result.content[0].text, /Claude Opus 5\.5: \$0\.04/);
   assert.match(cost.result.content[0].text, /platform\.claude\.com/);
-  assert.doesNotMatch(cost.result.content[0].text, /-/, 'no em dashes');
+  assert.ok(!cost.result.content[0].text.includes(String.fromCharCode(0x2014)), 'no em dashes');
 
   const rec = await rpc('tools/call', { name: 'trckr_record_turn', arguments: { model: 'gpt-5.5', provider: 'openai', lane: 'phoebus-codex', request_id: 'r1', session_id: 'sess', input_tokens: 2000, output_tokens: 300 } });
   assert.equal(rec.result.structuredContent.status, 'priced');
@@ -120,7 +120,7 @@ test('board: public price board, signed-in turn feed, connect page', async () =>
   assert.match(pub, /Claude Opus 5\.5/);
   assert.match(pub, /platform\.claude\.com/);
   assert.match(pub, /OpenRouter<\/h3>\s*<p>Not read yet/);
-  assert.doesNotMatch(pub, /-/);
+  assert.ok(!pub.includes(String.fromCharCode(0x2014)), 'no em dashes');
   const login = await call('/login?next=/');
   const state = new URL(login.headers.get('location')).searchParams.get('state');
   const cb = await call(`/oauth/google/callback?code=g&state=${encodeURIComponent(state)}`);
