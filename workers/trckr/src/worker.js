@@ -3,6 +3,7 @@
 import { createAuth, sha256b64u } from './auth.js';
 import { priceTurn } from './engine.js';
 import { createMcp } from './mcp.js';
+import { createBudgets, budgetText } from './budget.js';
 import { boardView, connectView } from './pages.js';
 import { SOURCES, refreshAll } from './pricing/pool.js';
 import { createStore, easternDay } from './store.js';
@@ -46,16 +47,47 @@ export function makeApp(env, deps = {}) {
       googleExchange: deps.googleExchange,
       now: deps.now,
     });
+  const budgets = createBudgets({ store });
   const mcp = createMcp({ store, tenant, fetchImpl: deps.fetchImpl, canRefresh: env.TRCKR_REFRESH !== 'off' });
 
   async function pools() {
     return Promise.all(SOURCES.map(async (s) => ({ id: s.id, label: s.label, page: s.page, snapshot: await store.latestSnapshot(s.id), last: await store.lastFetch(s.id) })));
   }
 
-  async function ingest(req) {
+  async function keyOwner(req) {
     const [scheme, key] = (req.headers.get('authorization') || '').split(' ');
-    const who = scheme === 'Bearer' && key?.startsWith('trk_') ? await store.ingestOwner(await sha256b64u(key)) : null;
-    if (!who) return json(401, { error: 'invalid_key', hint: 'Mint one with the trckr_ingest_key tool and send it as Authorization: Bearer <key>.' });
+    return scheme === 'Bearer' && key?.startsWith('trk_') ? store.ingestOwner(await sha256b64u(key)) : null;
+  }
+  const badKey = () => json(401, { error: 'invalid_key', hint: 'Mint one with the trckr_ingest_key tool and send it as Authorization: Bearer <key>.' });
+
+  // Hooks and watchers: GET ?session_id= checks; POST {session_id, cap_usd?, warn_pct?, stop_rule?, label?, usage?, close?} sets or reports.
+  async function budgetApi(req, url) {
+    const who = await keyOwner(req);
+    if (!who) return badKey();
+    let a = { session_id: url.searchParams.get('session_id') };
+    if (req.method === 'POST') {
+      try {
+        a = await req.json();
+      } catch {
+        return json(400, { error: 'invalid_json' });
+      }
+    }
+    if (!a?.session_id) return json(400, { error: 'session_id is required' });
+    const session_id = String(a.session_id).slice(0, 200);
+    try {
+      if (a.close) return json(200, (await budgets.close(who.owner, session_id)) || { session_id, state: 'none', stop: false, warn: false });
+      if (a.cap_usd !== undefined) await budgets.set(who.owner, { ...a, session_id });
+      if (a.usage) await budgets.rollup(who.owner, session_id, a.usage, who.label);
+    } catch (err) {
+      return json(400, { error: String(err?.message || err).slice(0, 200) });
+    }
+    const b = await budgets.evaluate(who.owner, session_id);
+    return json(200, b ? { ...b, text: budgetText(b) } : { session_id, state: 'none', stop: false, warn: false });
+  }
+
+  async function ingest(req) {
+    const who = await keyOwner(req);
+    if (!who) return badKey();
     let body;
     try {
       body = await req.json();
@@ -75,7 +107,13 @@ export function makeApp(env, deps = {}) {
       await store.recordTurn(who.owner, { lane, request_id: String(t.request_id).slice(0, 200), session_id: t.session_id ? String(t.session_id).slice(0, 200) : null, client: t.client ? String(t.client).slice(0, 60) : null }, p);
       out.push({ ok: true, request_id: t.request_id, status: p.status, cost_usd: p.cost_usd, source_url: p.price?.ref?.source_url || null, fetched_at: p.price?.ref?.fetched_at || null });
     }
-    return json(200, { recorded: out.filter((x) => x.ok).length, turns: out });
+    const sessions = [...new Set(list.map((t) => t?.session_id).filter(Boolean).map((x) => String(x).slice(0, 200)))];
+    const budget = {};
+    for (const sid of sessions) {
+      const b = await budgets.evaluate(who.owner, sid);
+      if (b) budget[sid] = { state: b.state, stop: b.stop, warn: b.warn, pct: b.pct, spent_usd: b.spent_usd, cap_usd: b.cap_usd, text: budgetText(b) };
+    }
+    return json(200, { recorded: out.filter((x) => x.ok).length, turns: out, ...(sessions.length ? { budget } : {}) });
   }
 
   async function handleMcp(req, auth) {
@@ -111,6 +149,7 @@ export function makeApp(env, deps = {}) {
     if (handled) return handled;
 
     if (url.pathname === '/v1/turns' && req.method === 'POST') return ingest(req);
+    if (url.pathname === '/v1/budget' && (req.method === 'GET' || req.method === 'POST')) return budgetApi(req, url);
     if (url.pathname === '/v1/prices' && req.method === 'GET') {
       const ps = await pools();
       return json(200, {
@@ -139,10 +178,19 @@ export function makeApp(env, deps = {}) {
     return json(404, { error: 'not_found' });
   }
 
-  return { fetch, store, scheduled: () => refreshAll(store, { fetchImpl: deps.fetchImpl }) };
+  // Two crons: prices every 30 minutes, the model-free budget watcher every 5. No cron given (tests) runs both.
+  async function scheduled(cron) {
+    const watch = () => budgets.watch({ alertUrl: env.TRCKR_ALERT_URL, alertToken: env.TRCKR_ALERT_TOKEN, fetchImpl: deps.alertFetch || deps.fetchImpl || fetch });
+    if (cron === '*/5 * * * *') return watch();
+    const prices = await refreshAll(store, { fetchImpl: deps.fetchImpl });
+    await watch();
+    return prices;
+  }
+
+  return { fetch, store, scheduled };
 }
 
 export default {
   fetch: (req, env, ctx) => makeApp(env).fetch(req, ctx),
-  scheduled: (event, env, ctx) => ctx.waitUntil(makeApp(env).scheduled()),
+  scheduled: (event, env, ctx) => ctx.waitUntil(makeApp(env).scheduled(event?.cron)),
 };

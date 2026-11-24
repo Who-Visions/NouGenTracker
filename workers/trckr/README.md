@@ -56,6 +56,26 @@ Production deploys from the cloud through Cloudflare Workers Builds, with no mac
 
 From a shell with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` exported, `npm run deploy:cloud` does the same thing. `deploy/deploy_prod.py` is the older Keymaker-node path with a built-in smoke test and rollback.
 
+## Budgets: caps Trckr enforces
+
+A session registers a dollar cap and stop rule at its start. Trckr prices its real token usage at list price and answers `ok`, `warn` or `over`. Dave's call on who hears what: the spending AI gets the warning first (at `warn_pct`, default 80, through its own check, so it can wrap up and write a handoff shard); only a session at its cap raises an alert to the coordinator; nobody pings the human at 80%.
+
+Two watchers, one ledger:
+
+| Side | Runs | Sees | Enforces with |
+| --- | --- | --- | --- |
+| Local, no cloud | `hooks/trckr_watch.py` from launchd or cron every minute, no model calls | Claude Code transcripts on that machine (`~/.claude/projects`), priced from the cached price board | signal files read by `hooks/trckr_budget_gate.py`: wrap-up note in the AI's context at the warning, every tool call denied at the cap |
+| Cloud | this Worker, cron every 5 minutes, D1 `nougen-trckr` | only what is reported to it: per-turn rows (`trckr_record_turn`, the Stop hook, the local watcher pushing with `TRCKR_INGEST_KEY`) and cumulative session usage (`trckr_budget` with `usage`) | `trckr_budget` / `GET /v1/budget` answer `stop: true`; one `budget_over` POST per batch to `TRCKR_ALERT_URL` |
+
+The cloud side cannot see a session that reports nothing. A cloud Claude session feeds it by calling `trckr_budget` each turn with its own cumulative usage; a provider-wide usage feed would need a provider admin usage key, which Trckr does not have.
+
+```sh
+python3 hooks/trckr_watch.py set <session_id> 8 --label "Trckr budgets" --stop-rule "write a handoff shard"
+python3 hooks/trckr_watch.py set default 20      # every session without its own cap
+python3 hooks/trckr_watch.py status
+# cron: * * * * * /usr/bin/python3 ~/.claude/hooks/trckr_watch.py
+```
+
 ## Claude Code hook
 
 `hooks/trckr_stop_hook.py` (stdlib only) runs on Stop, reads new turns from the session transcript (one per `requestId`, with 5m and 1h cache writes split), and posts them. Needs `TRCKR_INGEST_KEY`; optional `TRCKR_LANE`, `TRCKR_URL`. It never blocks the session.

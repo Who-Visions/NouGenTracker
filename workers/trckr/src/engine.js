@@ -25,6 +25,8 @@ export function normalizeTurn(t) {
     cache_write_5m_tokens: n(t.cache_write_5m_tokens ?? t.cache_write_tokens),
     cache_write_1h_tokens: n(t.cache_write_1h_tokens),
     reasoning_tokens: n(t.reasoning_tokens),
+    // Session totals summed over many requests: tiers are per request, so price at the base tier.
+    rollup: t.rollup === true,
   };
 }
 
@@ -33,7 +35,7 @@ export const promptSize = (t) => t.input_tokens + t.cache_read_tokens + t.cache_
 
 function pickBand(model, t) {
   const day = t.at.slice(0, 10);
-  const size = promptSize(t);
+  const size = t.rollup ? 0 : promptSize(t);
   return model.bands.find(
     (b) =>
       (b.valid_from === null || day >= b.valid_from) &&
