@@ -12,6 +12,7 @@ A single-file, cross-provider AI token usage tracker. It reads the local logs ea
 - [Usage](#usage)
 - [Forward tracking for local/free lanes](#forward-tracking-for-localfree-lanes)
 - [Design notes](#design-notes)
+- [Per-turn connector: NouGen//Trckr](#per-turn-connector-nougentrckr)
 - [Fleet totals](#fleet-totals)
 - [Working on this repo from more than one machine](#working-on-this-repo-from-more-than-one-machine)
 - [Fleet role](#fleet-role)
@@ -80,6 +81,10 @@ Local Ollama/Gemma calls and OpenRouter/HF requests don't persist token counts a
 - **`fleet/fleet_usage_log.py`** — the append-only JSONL ledger writer (`vault/fleet_usage.jsonl`). `token_tracker.py` reads it as the Fleet provider lane.
 
 Point your OpenAI-compatible / Ollama clients at the proxy and the local lanes start showing up in the report. Config via `FLEET_PROXY_PORT`, `FLEET_OLLAMA_UPSTREAM`, `FLEET_USAGE_LEDGER`.
+
+## Per-turn connector: NouGen//Trckr
+
+`workers/trckr` is the MCP connector at https://trckr.nougenai.com/mcp: live price pools read from each provider's own page (source URL and read time on every price) and per-turn cost for any model, cloud or local. See [workers/trckr/README.md](workers/trckr/README.md).
 
 ## 📝 Design notes
 

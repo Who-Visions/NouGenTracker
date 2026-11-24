@@ -1,0 +1,44 @@
+// NouGen//Trckr. Preview: `npm run deploy:preview` (workers.dev). Production on
+// trckr.nougenai.com: `npm run deploy:prod`, only on Dave's named yes.
+//
+// Secrets (from Keymaker, never in this file):
+//   wrangler secret put TRCKR_SIGNING_SECRET   [--env production]   random 32+ bytes, signs OAuth tokens
+//   wrangler secret put GOOGLE_CLIENT_ID       [--env production]   the fleet's shared Google OAuth client
+//   wrangler secret put GOOGLE_CLIENT_SECRET   [--env production]
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nougen-trckr-preview",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  // Every provider page is re-read every 30 minutes; an unchanged page writes nothing.
+  "triggers": { "crons": ["*/30 * * * *"] },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "nougen-trckr-preview", "database_id": "REPLACE_WITH_PREVIEW_D1_ID", "migrations_dir": "migrations" }
+  ],
+  "vars": {
+    "TRCKR_ALLOWED_EMAILS": "whoentertains@gmail.com,dave@whovisions.com",
+    "TRCKR_TENANT": "nougen",
+    // Shared Google client: Eye's callback relays state "trckr~..." here (Who-Visions/nougeneye CALLBACK_RELAYS).
+    "GOOGLE_REDIRECT_URI": "https://eye.nougenai.com/oauth/google/callback"
+  },
+  "env": {
+    "production": {
+      "name": "nougen-trckr",
+      "workers_dev": false,
+      "routes": [{ "pattern": "trckr.nougenai.com", "custom_domain": true }],
+      "triggers": { "crons": ["*/30 * * * *"] },
+      "d1_databases": [
+        { "binding": "DB", "database_name": "nougen-trckr", "database_id": "REPLACE_WITH_PROD_D1_ID", "migrations_dir": "migrations" }
+      ],
+      "vars": {
+        "PUBLIC_BASE_URL": "https://trckr.nougenai.com",
+        "TRCKR_ALLOWED_EMAILS": "whoentertains@gmail.com,dave@whovisions.com",
+        "TRCKR_TENANT": "nougen",
+        "GOOGLE_REDIRECT_URI": "https://eye.nougenai.com/oauth/google/callback"
+      }
+    }
+  }
+}

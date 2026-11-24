@@ -1,0 +1,14 @@
+{
+  "name": "nougen-trckr",
+  "private": true,
+  "version": "0.1.0",
+  "description": "NouGen//Trckr: per-turn token and cost tracking MCP connector with live provider price pools.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --disable-warning=ExperimentalWarning test/*.test.mjs",
+    "dev": "node dev/server.mjs",
+    "deploy:preview": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --env production"
+  },
+  "engines": { "node": ">=20" }
+}
