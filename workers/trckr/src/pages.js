@@ -1,5 +1,5 @@
 // NouGen//Trckr pages: the OAuth steps (same three-step rail as NouGen//Eye) and the live board,
-// in Trckr's own look: gold on black glass, tabular numbers, every price with its source.
+// in Trckr's own look: gold for money and radar green for live tracking on black glass, every price with its source.
 import { fmtUsd } from './pricing/core.js';
 
 export const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -22,7 +22,7 @@ const pct = (v) => (v === null || v === undefined ? 'n/a' : `${(v * 100).toFixed
 const money = (v) => (v === null || v === undefined ? '<span class="na">unpriced</span>' : esc(fmtUsd(v)));
 
 const CSS = `
-:root{color-scheme:dark;--gold:#f5c451;--gold2:#ffdd8a;--ink:#f6f1e4;--muted:#a89f8a;--dim:#6f6857;--line:rgba(245,196,81,.2);--glass:rgba(255,255,255,.035);--ok:#7be0a6;--warn:#ffb86b;--bad:#ff7a7a}
+:root{color-scheme:dark;--gold:#f5c451;--gold2:#ffdd8a;--ink:#f6f1e4;--muted:#a89f8a;--dim:#6f6857;--line:rgba(245,196,81,.2);--glass:rgba(255,255,255,.035);--ok:#7be0a6;--track:#2ee6a6;--track2:#8bf5d2;--trackline:rgba(46,230,166,.28);--warn:#ffb86b;--bad:#ff7a7a}
 *{box-sizing:border-box}
 html{background:#070604}
 body{margin:0;min-height:100vh;font:15px/1.5 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);
@@ -127,8 +127,12 @@ header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom
 nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 nav a,.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--glass);color:var(--ink);text-decoration:none;font-size:13px}
 nav a.on{background:var(--gold);color:#1d1503;border-color:var(--gold);font-weight:650}
-.live{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(123,224,166,.6);animation:pulse 2s infinite}
-@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(123,224,166,0)}100%{box-shadow:0 0 0 0 rgba(123,224,166,0)}}
+.live{width:8px;height:8px;border-radius:50%;background:var(--track);box-shadow:0 0 0 0 rgba(46,230,166,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(46,230,166,0)}100%{box-shadow:0 0 0 0 rgba(46,230,166,0)}}
+.trk{color:var(--track)}h2.trk{color:var(--track);display:flex;align-items:center;gap:10px}
+.stat.trk{border-color:var(--trackline);background:linear-gradient(160deg,rgba(46,230,166,.08),rgba(0,0,0,.28) 60%)}.stat.trk strong{color:var(--track2)}
+td.tk{color:var(--track2)}
+.hero::after{content:"";position:absolute;right:-90px;top:-90px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(46,230,166,.18),rgba(46,230,166,0) 65%);pointer-events:none}
 @media (prefers-reduced-motion:reduce){.live{animation:none}}
 .hero{padding:30px 26px;border:1px solid var(--line);border-radius:28px;margin-bottom:22px;background:linear-gradient(135deg,rgba(245,196,81,.1),rgba(255,255,255,.015) 55%);position:relative;overflow:hidden}
 .hero h1{margin:0 0 6px;font-size:clamp(26px,4vw,40px);line-height:1.1;font-weight:760;letter-spacing:-.01em}
@@ -153,7 +157,7 @@ td.model{font-weight:600}td.model small{display:block;font-weight:400;color:var(
 .sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
 .src{padding:16px;border-radius:18px;border:1px solid var(--line);background:var(--glass)}
 .src h3{margin:0 0 6px;font-size:16px;display:flex;align-items:center;gap:8px}
-.src .dot{width:9px;height:9px;border-radius:50%;background:var(--ok)}.src.off .dot{background:var(--bad)}
+.src .dot{width:9px;height:9px;border-radius:50%;background:var(--track);box-shadow:0 0 10px rgba(46,230,166,.6)}.src.off .dot{background:var(--bad)}
 .src p{margin:2px 0;color:var(--muted);font-size:12.5px;overflow-wrap:anywhere}
 .src code{font-size:11.5px;color:var(--dim)}
 details.prov{border-top:1px solid var(--line)}
@@ -224,27 +228,27 @@ export function boardView({ base, user, pools, usage, turns, days, sample }) {
   const stats = user
     ? `<div class="stats">
 <div class="stat"><span>Spend today</span><strong>${money(t?.cost_usd ?? 0)}</strong><small>Eastern day</small></div>
-<div class="stat"><span>Turns today</span><strong>${tok(t?.turns ?? 0)}</strong><small>${tok(t?.local ?? 0)} local, ${tok(t?.unpriced ?? 0)} unpriced</small></div>
-<div class="stat"><span>Tokens today</span><strong>${tok(t?.total_tokens ?? 0)}</strong><small>${tok(t?.output ?? 0)} out</small></div>
-<div class="stat"><span>Cache hit rate</span><strong>${pct(t?.cache_hit_rate)}</strong><small>target 95%</small></div>
+<div class="stat trk"><span>Turns today</span><strong>${tok(t?.turns ?? 0)}</strong><small>${tok(t?.local ?? 0)} local, ${tok(t?.unpriced ?? 0)} unpriced</small></div>
+<div class="stat trk"><span>Tokens today</span><strong>${tok(t?.total_tokens ?? 0)}</strong><small>${tok(t?.output ?? 0)} out</small></div>
+<div class="stat trk"><span>Cache hit rate</span><strong>${pct(t?.cache_hit_rate)}</strong><small>target 95%</small></div>
 <div class="stat"><span>Cache saved</span><strong>${money(t?.cache_savings_usd ?? 0)}</strong><small>vs. fresh input</small></div>
 </div>`
     : `<div class="stats">
-<div class="stat"><span>Providers read</span><strong>${live.length} of ${pools.length}</strong><small>from their own pages</small></div>
+<div class="stat trk"><span>Providers read</span><strong>${live.length} of ${pools.length}</strong><small>from their own pages</small></div>
 <div class="stat"><span>Models priced</span><strong>${tok(modelCount)}</strong><small>with cache tiers</small></div>
 <div class="stat"><span>Last read</span><strong style="font-size:18px">${esc(live.length ? clock(live.map((p) => p.snapshot.last_seen_at).sort().pop()) : 'not yet')}</strong><small>Eastern</small></div>
 <div class="stat"><span>Money math</span><strong>nano-$</strong><small>exact, no float</small></div>
 </div><div class="cta"><a class="btn primary" href="/connect">Connect your sessions</a><a class="btn" href="/login">Sign in for your turns</a></div>`;
 
   const feed = user
-    ? `<h2>Live turns</h2><div class="panel scroll">${
+    ? `<h2 class="trk"><span class="live" aria-hidden="true"></span>Live turns</h2><div class="panel scroll">${
         turns.length
           ? `<table><thead><tr><th>Time</th><th>Lane</th><th>Model</th><th class="n">In</th><th class="n">Cache read</th><th class="n">Cache write</th><th class="n">Out</th><th class="n">Hit</th><th class="n">Cost</th><th>Priced from</th></tr></thead><tbody>${turns
               .map((r) => {
                 const read = r.input_tokens + r.cache_read_tokens + r.cache_write_5m_tokens + r.cache_write_1h_tokens;
                 const tag = r.status === 'local' ? '<span class="tag local">self-hosted</span>' : r.status === 'priced' ? '' : `<span class="tag ${r.status === 'partial' ? 'warn' : 'bad'}">${esc(r.status)}</span>`;
                 return `<tr><td class="n">${esc(clock(r.at))}</td><td>${esc(r.lane)}</td><td class="model">${esc(r.model)}${tag}</td>
-<td class="n">${tok(r.input_tokens)}</td><td class="n">${tok(r.cache_read_tokens)}</td><td class="n">${tok(r.cache_write_5m_tokens + r.cache_write_1h_tokens)}</td><td class="n">${tok(r.output_tokens)}</td>
+<td class="n tk">${tok(r.input_tokens)}</td><td class="n tk">${tok(r.cache_read_tokens)}</td><td class="n tk">${tok(r.cache_write_5m_tokens + r.cache_write_1h_tokens)}</td><td class="n tk">${tok(r.output_tokens)}</td>
 <td class="n">${read ? pct(r.cache_read_tokens / read) : 'n/a'}</td><td class="n"><strong>${money(r.cost_usd)}</strong></td>
 <td>${r.source_url ? `<a href="${esc(r.source_url)}" rel="noopener">${esc(new URL(r.source_url).hostname)}</a> <span class="na">${esc(clock(r.price_fetched_at))}</span>` : `<span class="na">${esc(r.reason || (r.status === 'local' ? 'no API bill' : ''))}</span>`}</td></tr>`;
               })
@@ -256,7 +260,7 @@ ${days?.length ? `<h2>By day (Eastern)</h2><div class="panel scroll"><table><the
             .join('')}</tbody></table></div>` : ''}`
     : '';
 
-  const sources = `<h2>Price pools</h2><div class="sources">${pools
+  const sources = `<h2 class="trk"><span class="live" aria-hidden="true"></span>Price pools</h2><div class="sources">${pools
     .map((p) =>
       p.snapshot
         ? `<div class="src"><h3><span class="dot" aria-hidden="true"></span>${esc(p.label)}</h3>
