@@ -9,7 +9,7 @@ import { fixtureFetch } from './helpers.mjs';
 const BASE = 'https://trckr.nougenai.com';
 const OWNER = 'owner@example.com';
 
-async function setup(identity = { email: OWNER, email_verified: true }) {
+async function setup(identity = { email: OWNER, email_verified: true }, overrides = {}) {
   const env = {
     DB: createD1(),
     PUBLIC_BASE_URL: BASE,
@@ -18,10 +18,14 @@ async function setup(identity = { email: OWNER, email_verified: true }) {
     GOOGLE_CLIENT_ID: 'gid',
     GOOGLE_REDIRECT_URI: 'https://eye.nougenai.com/oauth/google/callback',
   };
+  for (const [k, v] of Object.entries(overrides)) {
+    if (v === undefined) delete env[k];
+    else env[k] = v;
+  }
   const app = makeApp(env, { fetchImpl: fixtureFetch(), googleExchange: async () => identity });
   await app.scheduled();
   const call = (path, init = {}) => app.fetch(new Request(`${BASE}${path}`, init), { waitUntil() {} });
-  return { app, call };
+  return { app, call, env, identity };
 }
 
 async function signIn(call) {
@@ -132,4 +136,38 @@ test('board: public price board, signed-in turn feed, connect page', async () =>
   const connect = await (await call('/connect')).text();
   assert.match(connect, /https:\/\/trckr\.nougenai\.com\/mcp/);
   assert.match(connect, /codex mcp add nougen-trckr/);
+});
+
+test('cloud deploy shape: no signing secret set, Google returns to Trckr itself, and the minted secret survives a restart', async () => {
+  const first = await setup(undefined, { TRCKR_SIGNING_SECRET: undefined, GOOGLE_REDIRECT_URI: undefined });
+  const reg = await (await first.call('/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ client_name: 'Claude', redirect_uris: ['https://claude.ai/api/mcp/auth_callback'] }) })).json();
+  const q = new URLSearchParams({ client_id: reg.client_id, redirect_uri: 'https://claude.ai/api/mcp/auth_callback', response_type: 'code', code_challenge: 'c'.repeat(43), code_challenge_method: 'S256', state: 's' });
+  const login = await (await first.call(`/authorize?${q}`)).text();
+  const google = new URL(login.match(/href="(https:\/\/accounts\.google\.com[^"]+)"/)[1].replace(/&#38;/g, '&'));
+  assert.equal(google.searchParams.get('redirect_uri'), `${BASE}/oauth/google/callback`);
+  const state = google.searchParams.get('state');
+  assert.ok(!state.startsWith('trckr~'), 'no Eye relay tag on the own callback');
+
+  // A fresh Worker instance on the same D1 reads the same secret, so the state it never saw still verifies.
+  const again = makeApp(first.env, { fetchImpl: fixtureFetch(), googleExchange: async () => ({ email: OWNER, email_verified: true }) });
+  const cb = await again.fetch(new Request(`${BASE}/oauth/google/callback?code=g&state=${encodeURIComponent(state)}`), { waitUntil() {} });
+  assert.equal(cb.status, 200);
+  assert.match(await cb.text(), /would like access to your NouGen\/\/Trckr/);
+  const row = await first.env.DB.prepare("SELECT value FROM settings WHERE key = 'signing_secret'").first();
+  assert.ok(row.value.length >= 60, 'a 48-byte secret was minted into D1');
+});
+
+test('before the Google client is set, sign-in pages say so instead of sending people to Google', async () => {
+  const { call } = await setup(undefined, { GOOGLE_CLIENT_ID: undefined });
+  const reg = await (await call('/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ client_name: 'Claude', redirect_uris: ['https://claude.ai/api/mcp/auth_callback'] }) })).json();
+  const q = new URLSearchParams({ client_id: reg.client_id, redirect_uri: 'https://claude.ai/api/mcp/auth_callback', response_type: 'code', code_challenge: 'c'.repeat(43), code_challenge_method: 'S256' });
+  const page = await call(`/authorize?${q}`);
+  assert.equal(page.status, 503);
+  const html = await page.text();
+  assert.match(html, /isn't switched on/);
+  assert.doesNotMatch(html, /accounts\.google\.com/);
+  const login = await call('/login');
+  assert.equal(login.status, 503);
+  const prices = await call('/v1/prices');
+  assert.equal(prices.status, 200, 'the public price board still works');
 });

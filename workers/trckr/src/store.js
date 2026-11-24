@@ -159,6 +159,17 @@ export function createStore(db) {
       return out;
     },
 
+    // The OAuth signing secret, minted once into D1 when the Worker has none set.
+    // INSERT OR IGNORE then re-read, so two cold starts racing agree on one value.
+    async signingSecret() {
+      const have = await first("SELECT value FROM settings WHERE key = 'signing_secret'");
+      if (have) return have.value;
+      const raw = crypto.getRandomValues(new Uint8Array(48));
+      const value = btoa(String.fromCharCode(...raw)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      await run("INSERT OR IGNORE INTO settings (key, value, created_at) VALUES ('signing_secret', ?, ?)", value, new Date().toISOString());
+      return (await first("SELECT value FROM settings WHERE key = 'signing_secret'")).value;
+    },
+
     async createIngestKey(owner, label, keyHash) {
       await run('INSERT INTO ingest_keys (key_hash, owner, label, created_at) VALUES (?, ?, ?, ?)', keyHash, owner, label, new Date().toISOString());
     },

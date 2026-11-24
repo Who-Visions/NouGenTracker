@@ -32,7 +32,9 @@ Every model request a session makes (Claude, GPT, Gemini, OpenRouter lanes, loca
 
 Tools: `trckr_prices`, `trckr_price`, `trckr_turn_cost`, `trckr_record_turn`, `trckr_session`, `trckr_usage`, `trckr_pools`, `trckr_refresh`, `trckr_ingest_key`. The fleet's daily rollups stay on NouGenShards `tracker_daily` / `tracker_spend`; Trckr is the per-turn layer under them.
 
-Google sign-in uses the fleet's shared Google client. Its registered redirect is Eye's callback, so Trckr sends `state` prefixed `trckr~` and Eye relays the browser to `https://trckr.nougenai.com/oauth/google/callback` (Who-Visions/nougeneye `CALLBACK_RELAYS`).
+Google sign-in uses the fleet's shared Google client and returns to Trckr's own `https://trckr.nougenai.com/oauth/google/callback`, which must be listed as an authorized redirect URI on that client. Setting the `GOOGLE_REDIRECT_URI` var to Eye's callback instead makes Trckr send `state` prefixed `trckr~` so Eye relays the browser here (Who-Visions/nougeneye `CALLBACK_RELAYS`). Until `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set, sign-in pages say so (503) and the public price board still works.
+
+The OAuth signing secret comes from `TRCKR_SIGNING_SECRET` when set. Otherwise the Worker mints 48 random bytes into D1 (`settings`, migration 0002) on first boot and keeps using them, so a cloud deploy needs no secret pasted by hand.
 
 ## Run it
 
@@ -44,14 +46,15 @@ TRCKR_SEED_SAMPLE=1 npm run dev   # http://localhost:8787, D1 on node:sqlite, si
 
 ## Deploy (named yes only)
 
-```sh
-npx wrangler d1 create nougen-trckr                     # put the id in wrangler.jsonc env.production
-npx wrangler d1 migrations apply nougen-trckr --remote --env production
-npx wrangler secret put TRCKR_SIGNING_SECRET --env production   # from Keymaker
-npx wrangler secret put GOOGLE_CLIENT_ID --env production       # shared fleet Google client
-npx wrangler secret put GOOGLE_CLIENT_SECRET --env production
-npm run deploy:prod                                     # binds trckr.nougenai.com as a custom domain
-```
+Production deploys from the cloud through Cloudflare Workers Builds, with no machine of Dave's involved:
+
+1. Cloudflare dashboard, Workers & Pages, Create, Import a repository: `Who-Visions/NouGenTracker`.
+2. Root directory `workers/trckr`, build command empty, deploy command `node deploy/cf_build.mjs`.
+3. After the first build, Worker `nougen-trckr`, Settings, Variables and Secrets: add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as secrets.
+
+`deploy/cf_build.mjs` uses the token Workers Builds injects to find or create the `nougen-trckr` D1 database, apply migrations and `wrangler deploy --env production`, which binds `trckr.nougenai.com` as a custom domain. Every push to the production branch redeploys. Roll back from the Worker's Deployments tab.
+
+From a shell with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` exported, `npm run deploy:cloud` does the same thing. `deploy/deploy_prod.py` is the older Keymaker-node path with a built-in smoke test and rollback.
 
 ## Claude Code hook
 

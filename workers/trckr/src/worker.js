@@ -32,13 +32,16 @@ export function makeApp(env, deps = {}) {
   const store = deps.store || createStore(env.DB);
   const tenant = env.TRCKR_TENANT || 'nougen';
   const baseFor = (req) => (env.PUBLIC_BASE_URL || new URL(req.url).origin).replace(/\/$/, '');
-  const authFor = (base) =>
+  // TRCKR_SIGNING_SECRET wins when set; otherwise the Worker mints its own once and keeps it in D1.
+  let secretP;
+  const signingSecret = () => (secretP ||= env.TRCKR_SIGNING_SECRET ? Promise.resolve(env.TRCKR_SIGNING_SECRET) : store.signingSecret());
+  const authFor = async (base) =>
     createAuth({
       base,
       googleId: env.GOOGLE_CLIENT_ID,
       googleSecret: env.GOOGLE_CLIENT_SECRET,
       allowedEmails: env.TRCKR_ALLOWED_EMAILS,
-      signingSecret: env.TRCKR_SIGNING_SECRET,
+      signingSecret: await signingSecret(),
       googleRedirect: env.GOOGLE_REDIRECT_URI,
       googleExchange: deps.googleExchange,
       now: deps.now,
@@ -102,7 +105,7 @@ export function makeApp(env, deps = {}) {
     if (url.pathname === '/assets/trckr.js') return new Response(BOARD_JS, { headers: { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'public, max-age=300' } });
     if (url.pathname === '/robots.txt') return new Response('User-agent: *\nAllow: /\nDisallow: /mcp\n', { headers: { 'content-type': 'text/plain' } });
 
-    const auth = authFor(base);
+    const auth = await authFor(base);
     if (url.pathname === '/mcp' || url.pathname === '/mcp/') return handleMcp(req, auth);
     const handled = await auth.handle(req);
     if (handled) return handled;

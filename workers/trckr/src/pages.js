@@ -84,8 +84,12 @@ export function loginPage({ app, googleHref }) {
     'Sign in to NouGen//Trckr',
     `<h1>Log in to NouGen//Trckr to link with ${esc(app)}</h1>
 <p class="lead">${esc(app)} will be able to</p>${abilities()}
-<a class="btn primary" href="${esc(googleHref)}"><span class="g">${GOOGLE_ICON}</span><span>Continue with Google</span></a>
-<p class="fine">No passwords or keys to paste. Only allowed accounts get in.</p>`,
+${
+      googleHref
+        ? `<a class="btn primary" href="${esc(googleHref)}"><span class="g">${GOOGLE_ICON}</span><span>Continue with Google</span></a>
+<p class="fine">No passwords or keys to paste. Only allowed accounts get in.</p>`
+        : `<p class="fine">Google sign-in isn't switched on for this Trckr yet. The owner adds the Google client to the Worker once, then this button appears.</p>`
+    }`,
     1,
   );
 }

@@ -123,6 +123,8 @@ export function createAuth({ base, googleId, googleSecret, allowedEmails, signin
       return JSON.parse(new TextDecoder().decode(unb64u(String(idt).split('.')[1])));
     });
 
+  // Until the Google client is set on the Worker, sign-in pages say so instead of sending people to a broken Google screen.
+  const googleReady = !!(googleId && (googleSecret || googleExchange));
   const googleUrl = (state) => {
     const g = new URL(GOOGLE_AUTH);
     g.search = new URLSearchParams({
@@ -203,7 +205,7 @@ export function createAuth({ base, googleId, googleSecret, allowedEmails, signin
       if (isAllowed(known)) {
         return html(200, consentPage({ app, email: known, token: await sign('consent', { ...flow, email: known }, '10m'), switchHref: google }));
       }
-      return html(200, loginPage({ app, googleHref: google }));
+      return html(googleReady ? 200 : 503, loginPage({ app, googleHref: googleReady ? google : null }));
     }
 
     if (url.pathname === '/oauth/google/callback') {
@@ -266,6 +268,7 @@ export function createAuth({ base, googleId, googleSecret, allowedEmails, signin
     }
 
     if (url.pathname === '/login') {
+      if (!googleReady) return html(503, loginPage({ app: 'the board', googleHref: null }));
       return new Response(null, { status: 302, headers: { location: googleUrl(await sign('web', { next: safeNext(url.searchParams.get('next')) }, '10m')), 'cache-control': 'no-store' } });
     }
     if (url.pathname === '/logout') {

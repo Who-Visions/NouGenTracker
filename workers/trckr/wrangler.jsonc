@@ -1,10 +1,10 @@
-// NouGen//Trckr. Preview: `npm run deploy:preview` (workers.dev). Production on
-// trckr.nougenai.com: `npm run deploy:prod`, only on Dave's named yes.
+// NouGen//Trckr. Production on trckr.nougenai.com deploys from the cloud through Cloudflare
+// Workers Builds: deploy command `node deploy/cf_build.mjs`, which finds or makes the D1
+// database, applies migrations and deploys. No machine of Dave's is involved.
 //
-// Secrets (from Keymaker, never in this file):
-//   wrangler secret put TRCKR_SIGNING_SECRET   [--env production]   random 32+ bytes, signs OAuth tokens
-//   wrangler secret put GOOGLE_CLIENT_ID       [--env production]   the fleet's shared Google OAuth client
-//   wrangler secret put GOOGLE_CLIENT_SECRET   [--env production]
+// Worker secrets, set once in the Cloudflare dashboard (never in this file):
+//   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET   the fleet's shared Google OAuth client
+//   TRCKR_SIGNING_SECRET                     optional; without it the Worker mints its own and keeps it in D1
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nougen-trckr-preview",
@@ -20,9 +20,9 @@
   ],
   "vars": {
     "TRCKR_ALLOWED_EMAILS": "whoentertains@gmail.com,dave@whovisions.com",
-    "TRCKR_TENANT": "nougen",
-    // Shared Google client: Eye's callback relays state "trckr~..." here (Who-Visions/nougeneye CALLBACK_RELAYS).
-    "GOOGLE_REDIRECT_URI": "https://eye.nougenai.com/oauth/google/callback"
+    "TRCKR_TENANT": "nougen"
+    // Google returns to this Worker's own /oauth/google/callback. Setting GOOGLE_REDIRECT_URI to Eye's
+    // callback instead routes through Eye's "trckr~" relay (Who-Visions/nougeneye CALLBACK_RELAYS).
   },
   "env": {
     "production": {
@@ -36,8 +36,7 @@
       "vars": {
         "PUBLIC_BASE_URL": "https://trckr.nougenai.com",
         "TRCKR_ALLOWED_EMAILS": "whoentertains@gmail.com,dave@whovisions.com",
-        "TRCKR_TENANT": "nougen",
-        "GOOGLE_REDIRECT_URI": "https://eye.nougenai.com/oauth/google/callback"
+        "TRCKR_TENANT": "nougen"
       }
     }
   }
