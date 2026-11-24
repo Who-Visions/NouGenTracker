@@ -1,0 +1,94 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-24",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 490015,
+    "input_tokens": 4807,
+    "output_tokens": 2104,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 0,
+    "cache_read": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-24T00:48:08-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 17,
+  "machine": "phoebus",
+  "models": {
+    "<synthetic>": {
+      "cache_creation": 0,
+      "cache_read": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "reasoning": 0
+    },
+    "Gemini 4 Neon (Low) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 490015,
+      "input_tokens": 4807,
+      "output_tokens": 2104,
+      "reasoning": 0
+    }
+  },
+  "partial": true,
+  "provider_stats": {
+    "Claude Code": {
+      "cache_hit_ratio": 0.0,
+      "cache_write_tokens": 0,
+      "distinct_sessions": 1,
+      "peak_context_used_percent": 0.0,
+      "plan_types": [],
+      "rate_limits": {},
+      "total_tokens": 0,
+      "uncached_input_tokens": 0
+    }
+  },
+  "schema": 3,
+  "sketch": [
+    "087431c8644553e1",
+    "11aa9db76be14c0e",
+    "15029e72749128c3",
+    "28481d76bf8a7649",
+    "29c79053d6c6d992",
+    "2b3efdb2190a1186",
+    "3da0ce44ad15b8d7",
+    "3e6e18043c8bac40",
+    "46206d2ced18cb32",
+    "6c8bf653b9c6f700",
+    "79cfe30ee5e229f9",
+    "835ff596455a937a",
+    "a9d7ab6c54770da0",
+    "d8fb3994230d9935",
+    "e24624f8e8cbca42",
+    "e86cbc144ac28011",
+    "fad7c91b758bad88"
+  ],
+  "sources": {
+    "Antigravity (Fallback)": {
+      "cache_creation": 0,
+      "cache_read": 490015,
+      "input_tokens": 4807,
+      "output_tokens": 2104,
+      "reasoning": 0
+    },
+    "Claude Code": {
+      "cache_creation": 0,
+      "cache_read": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 0,
+    "cache_read": 490015,
+    "input_tokens": 4807,
+    "output_tokens": 2104,
+    "reasoning": 0
+  }
+}

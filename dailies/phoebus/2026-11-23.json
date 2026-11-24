@@ -3,9 +3,9 @@
   "date": "2026-11-23",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 22199,
-    "input_tokens": 14883,
-    "output_tokens": 138,
+    "cache_read": 1064499,
+    "input_tokens": 39946,
+    "output_tokens": 9478,
     "reasoning": 0
   },
   "exact": {
@@ -15,9 +15,9 @@
     "output_tokens": 458564,
     "reasoning": 0
   },
-  "generated_at": "2026-11-23T20:39:58-05:00",
+  "generated_at": "2026-11-24T00:48:08-05:00",
   "generated_by": "claude-cli",
-  "invocations": 1025,
+  "invocations": 1093,
   "machine": "phoebus",
   "models": {
     "<synthetic>": {
@@ -25,6 +25,20 @@
       "cache_read": 0,
       "input_tokens": 0,
       "output_tokens": 0,
+      "reasoning": 0
+    },
+    "Gemini 4 Hydrogen (Medium) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 6501,
+      "input_tokens": 6777,
+      "output_tokens": 245,
+      "reasoning": 0
+    },
+    "Gemini 4 Neon (Low) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 1035799,
+      "input_tokens": 18286,
+      "output_tokens": 9095,
       "reasoning": 0
     },
     "claude-haiku-5-5": {
@@ -56,7 +70,7 @@
       "reasoning": 0
     }
   },
-  "partial": true,
+  "partial": false,
   "provider_stats": {
     "Claude Code": {
       "cache_hit_ratio": 0.9774,
@@ -92,6 +106,7 @@
     "0602bf6887ccbdf7",
     "068f2cffc0793569",
     "06d4742a9ad252cf",
+    "06ea6863dfe4dc95",
     "06eb328243a2d8a6",
     "0700a374a3c443b9",
     "071631504d67e6f8",
@@ -133,15 +148,14 @@
     "0fe3776ff8a8a580",
     "0ff699b261a07b53",
     "101f9cc7fef00580",
-    "1089d4c40793f33f",
-    "10f6fefa4ed3c1f9"
+    "1089d4c40793f33f"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 22199,
-      "input_tokens": 14883,
-      "output_tokens": 138,
+      "cache_read": 1064499,
+      "input_tokens": 39946,
+      "output_tokens": 9478,
       "reasoning": 0
     },
     "Claude Code": {
@@ -154,9 +168,9 @@
   },
   "totals": {
     "cache_creation": 9450058,
-    "cache_read": 409653204,
-    "input_tokens": 16931,
-    "output_tokens": 458702,
+    "cache_read": 410695504,
+    "input_tokens": 41994,
+    "output_tokens": 468042,
     "reasoning": 0
   }
 }
