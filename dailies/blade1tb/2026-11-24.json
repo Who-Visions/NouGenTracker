@@ -3,9 +3,9 @@
   "date": "2026-11-24",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 36050160,
-    "input_tokens": 174489,
-    "output_tokens": 57879,
+    "cache_read": 36143303,
+    "input_tokens": 174908,
+    "output_tokens": 58800,
     "reasoning": 0
   },
   "exact": {
@@ -15,9 +15,9 @@
     "output_tokens": 0,
     "reasoning": 0
   },
-  "generated_at": "2026-11-24T18:59:35-05:00",
+  "generated_at": "2026-11-24T22:57:20-05:00",
   "generated_by": "claude-cli",
-  "invocations": 617,
+  "invocations": 675,
   "machine": "blade1tb",
   "models": {
     "<synthetic>": {
@@ -36,9 +36,9 @@
     },
     "Gemini 4 Carbon (Low) (estimated)": {
       "cache_creation": 0,
-      "cache_read": 2714735,
-      "input_tokens": 71312,
-      "output_tokens": 21808,
+      "cache_read": 2807878,
+      "input_tokens": 71731,
+      "output_tokens": 22729,
       "reasoning": 0
     },
     "Gemini 4 Neon (Low) (estimated)": {
@@ -54,7 +54,7 @@
     "Claude Code": {
       "cache_hit_ratio": 0.0,
       "cache_write_tokens": 0,
-      "distinct_sessions": 82,
+      "distinct_sessions": 94,
       "peak_context_used_percent": 0.0,
       "plan_types": [],
       "rate_limits": {},
@@ -72,6 +72,7 @@
     "028c282dc53424ec",
     "029f28a2d812d0ae",
     "02cf142a7e6922b4",
+    "03170ed12587342e",
     "03d4c791afc68f14",
     "03effeb3af802acc",
     "044b94a0dfa9b098",
@@ -85,6 +86,7 @@
     "069ea82dfeb27604",
     "0778fef92af65b21",
     "08091493cfe54703",
+    "082e55f06fbc7990",
     "096ce72fec7033ba",
     "09780a801ed19840",
     "09e8b7965c6277a3",
@@ -120,21 +122,19 @@
     "15233e39de64a16f",
     "15ec35b4120ffb11",
     "15f9f5106241e469",
+    "160be8a6bfeeda52",
+    "16363752c7198566",
     "163bd72097f7ef88",
     "1653abb016c63fb1",
     "16b796857653bcc7",
-    "170350a6a8c34274",
-    "1808e136b266bd1f",
-    "181f3a661eca7b38",
-    "186102aaf2a95ef9",
-    "187a0c3bc4a1bad5"
+    "170350a6a8c34274"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 36050160,
-      "input_tokens": 174489,
-      "output_tokens": 57879,
+      "cache_read": 36143303,
+      "input_tokens": 174908,
+      "output_tokens": 58800,
       "reasoning": 0
     },
     "Claude Code": {
@@ -147,9 +147,9 @@
   },
   "totals": {
     "cache_creation": 0,
-    "cache_read": 36050160,
-    "input_tokens": 174489,
-    "output_tokens": 57879,
+    "cache_read": 36143303,
+    "input_tokens": 174908,
+    "output_tokens": 58800,
     "reasoning": 0
   }
 }
