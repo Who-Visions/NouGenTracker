@@ -20,6 +20,7 @@ def _load(name, filename):
 
 
 tt = _load("token_tracker", "token_tracker.py")
+pc = _load("pricing_catalog", "pricing_catalog.py")
 
 CLAUDE_5_FAMILY = ("claude-opus-5", "claude-sonnet-5", "claude-fable-5", "claude-haiku-4-5")
 
@@ -155,3 +156,52 @@ def test_family_inference_does_not_invent_prices():
 def test_exact_entries_are_untouched_by_the_fallback():
     for model in ("gemini-3.5-flash-high", "gemini-3.1-pro-low", "claude-opus-5"):
         assert tt.price_for(model)[3] == tt.DOC
+
+
+# --- Meta (Muse Spark) ----------------------------------------------------
+#
+# Verified 2026-11-25 against Meta's own pricing page
+# (dev.meta.ai/docs/pricing-rate-limits.md): Standard $1.25/$4.25/$0.15,
+# Contributor $0.10/$0.20/$0.002 per MTok. Without these rows Muse billed at
+# the $1/$4 unknown-model default — the same silent undercount that hit
+# claude-opus-5 (255M tokens) before its row existed.
+
+MUSE_MODELS = (
+    "muse-spark-1.3", "muse-spark", "meta/muse-spark", "meta-muse-spark",
+    "muse-spark-1.3-contributor", "meta/muse-spark-contributor",
+    "meta-muse-spark-contributor",
+)
+
+
+def test_muse_spark_models_are_priced():
+    for model in MUSE_MODELS:
+        assert model in tt.MODEL_PRICING, f"{model} missing — would bill at the default"
+
+
+def test_muse_spark_standard_is_priced_at_list():
+    assert tt.price_for("muse-spark-1.3")[:3] == (1.25, 4.25, 0.15)
+    assert tt.price_for("muse-spark")[:3] == (1.25, 4.25, 0.15)
+    assert tt.price_for("meta/muse-spark")[:3] == (1.25, 4.25, 0.15)
+    assert tt.price_for("meta-muse-spark")[:3] == (1.25, 4.25, 0.15)
+    assert tt.price_for("muse-spark-1.3")[:3] != tt.DEFAULT_PRICING[:3]
+
+
+def test_muse_spark_contributor_is_priced_at_list():
+    assert tt.price_for("muse-spark-1.3-contributor")[:3] == (0.10, 0.20, 0.002)
+    assert tt.price_for("meta/muse-spark-contributor")[:3] == (0.10, 0.20, 0.002)
+    assert tt.price_for("meta-muse-spark-contributor")[:3] == (0.10, 0.20, 0.002)
+
+
+def test_muse_spark_estimated_suffix_still_resolves():
+    assert tt.price_for("muse-spark-1.3 (estimated)") == tt.price_for("muse-spark-1.3")
+
+
+def test_muse_spark_catalog_lookup_returns_the_standard_record():
+    rec = pc.lookup_model("muse-spark")
+    assert rec is not None
+    assert rec["rates"]["text"] == {"cache_read": 0.15, "input": 1.25, "output": 4.25}
+    assert rec["vendor"] == "meta"
+    assert rec["billing_status"] == "priced"
+    assert pc.lookup_model("meta/muse-spark-contributor")["rates"]["text"] == {
+        "cache_read": 0.002, "input": 0.10, "output": 0.20,
+    }
