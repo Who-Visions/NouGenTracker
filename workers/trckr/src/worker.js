@@ -70,7 +70,13 @@ export function makeApp(env, deps = {}) {
         out.push({ ok: false, error: 'model and request_id are required' });
         continue;
       }
-      const p = await priceTurn(store, t);
+      let p;
+      try {
+        p = await priceTurn(store, t);
+      } catch (err) {
+        out.push({ ok: false, request_id: t.request_id, error: String(err?.message || err).slice(0, 200) });
+        continue;
+      }
       const lane = String(t.lane || who.label).slice(0, 80);
       await store.recordTurn(who.owner, { lane, request_id: String(t.request_id).slice(0, 200), session_id: t.session_id ? String(t.session_id).slice(0, 200) : null, client: t.client ? String(t.client).slice(0, 60) : null }, p);
       out.push({ ok: true, request_id: t.request_id, status: p.status, cost_usd: p.cost_usd, source_url: p.price?.ref?.source_url || null, fetched_at: p.price?.ref?.fetched_at || null });
