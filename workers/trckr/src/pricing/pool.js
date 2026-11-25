@@ -7,6 +7,7 @@ import { parseAnthropic } from './anthropic.js';
 import { parseGemini } from './gemini.js';
 import { parseOpenAI } from './openai.js';
 import { parseOpenRouter } from './openrouter.js';
+import { parseHuggingFace } from './huggingface.js';
 
 export const SOURCES = [
   {
@@ -46,6 +47,13 @@ export const SOURCES = [
     page: 'https://openrouter.ai/models',
     urls: [['https://openrouter.ai/api/v1/models', 'application/json']],
     parse: parseOpenRouter,
+  },
+  {
+    id: 'huggingface',
+    label: 'Hugging Face',
+    page: 'https://huggingface.co/pricing',
+    urls: [['https://router.huggingface.co/v1/models', 'application/json']],
+    parse: parseHuggingFace,
   },
 ];
 

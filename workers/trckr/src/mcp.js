@@ -15,7 +15,7 @@ const INSTRUCTIONS =
 
 const TURN_PROPS = {
   model: { type: 'string', description: 'Model id as the client reports it, e.g. claude-opus-5-5[1m], gpt-5.5, gemini-2.5-pro, qwen3:32b' },
-  provider: { type: 'string', description: 'anthropic | openai | google | openrouter | ollama | lmstudio | local. Optional; searched in that order when left out.' },
+  provider: { type: 'string', description: 'anthropic | openai | google | openrouter | huggingface (model as model:provider) | ollama | lmstudio | local. Optional; searched in that order when left out.' },
   input_tokens: { type: 'integer', minimum: 0, description: 'Uncached input tokens' },
   output_tokens: { type: 'integer', minimum: 0, description: 'Output tokens, reasoning included' },
   cache_read_tokens: { type: 'integer', minimum: 0, description: 'Tokens read from the prompt cache' },

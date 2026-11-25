@@ -9,8 +9,16 @@ import { SOURCES } from './pricing/pool.js';
 // Self-hosted runtimes: the tokens are real, the API bill is zero.
 export const LOCAL_PROVIDERS = new Set(['ollama', 'lmstudio', 'lm-studio', 'llama.cpp', 'llamacpp', 'vllm', 'local', 'mlx', 'gemma-local']);
 
-const FIRST_PARTY = ['anthropic', 'openai', 'google', 'openrouter'];
-const PROVIDER_ALIASES = { claude: 'anthropic', gemini: 'google', vertex: 'google', codex: 'openai', chatgpt: 'openai' };
+const FIRST_PARTY = ['anthropic', 'openai', 'google', 'openrouter', 'huggingface'];
+const PROVIDER_ALIASES = { hf: 'huggingface', 'hugging-face': 'huggingface', claude: 'anthropic', gemini: 'google', vertex: 'google', codex: 'openai', chatgpt: 'openai' };
+
+// A turn's time picks the dated price, so an unreadable one is an error the caller sees, never a guess.
+function isoAt(v) {
+  if (!v) return new Date().toISOString();
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) throw new TypeError(`at is not a valid date: ${String(v).slice(0, 40)}`);
+  return d.toISOString();
+}
 
 export function normalizeTurn(t) {
   const n = (v) => Math.max(0, Math.trunc(Number(v) || 0));
@@ -18,7 +26,7 @@ export function normalizeTurn(t) {
   return {
     provider: PROVIDER_ALIASES[provider] || provider || null,
     model: String(t.model || '').trim(),
-    at: t.at ? new Date(t.at).toISOString() : new Date().toISOString(),
+    at: isoAt(t.at),
     input_tokens: n(t.input_tokens),
     output_tokens: n(t.output_tokens),
     cache_read_tokens: n(t.cache_read_tokens),

@@ -93,3 +93,9 @@ test('turns upsert on lane + request id, and usage rolls them up', async () => {
   assert.deepEqual(days.map((d) => [d.key, d.turns]), [['2026-11-24', 1], ['2026-11-23', 1]]);
   assert.deepEqual(await store.listTurns('someone-else@example.com'), []);
 });
+
+test('an unreadable turn time is a clear error, not a RangeError, and one bad turn leaves the batch standing', async () => {
+  const { normalizeTurn } = await import('../src/engine.js');
+  assert.throws(() => normalizeTurn({ model: 'm', at: 'yesterday-ish' }), { name: 'TypeError', message: /at is not a valid date/ });
+  assert.ok(normalizeTurn({ model: 'm' }).at);
+});
