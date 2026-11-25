@@ -6,11 +6,12 @@ import { SOURCES, refreshAll } from './pricing/pool.js';
 import { priceTurn, resolvePrice } from './engine.js';
 import { eastern } from './pages.js';
 import { sha256b64u } from './auth.js';
+import { createBudgets, budgetText } from './budget.js';
 
 export const PROTOCOL_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
 const SERVER = { name: 'nougen-trckr', title: 'NouGen//Trckr', version: '1.0.0' };
 const INSTRUCTIONS =
-  'NouGen//Trckr prices model usage per turn from live provider pages. Use trckr_turn_cost or trckr_record_turn with the token counts a model reported (input, output, cache read, cache write) to get the exact cost; every price carries its source page and read time. A model no page lists comes back unpriced, never estimated. Local runtimes (provider "ollama", "lmstudio", "local") are tracked at $0. Times are shown in 12-hour Eastern.';
+  'NouGen//Trckr prices model usage per turn from live provider pages. Budgets: register a cap with trckr_budget_set at the start of a session, then call trckr_budget once per turn (pass the session\'s cumulative usage if you have it). At the warning, wrap up and write a handoff; at stop=true, make no more model calls. Use trckr_turn_cost or trckr_record_turn with the token counts a model reported (input, output, cache read, cache write) to get the exact cost; every price carries its source page and read time. A model no page lists comes back unpriced, never estimated. Local runtimes (provider "ollama", "lmstudio", "local") are tracked at $0. Times are shown in 12-hour Eastern.';
 
 const TURN_PROPS = {
   model: { type: 'string', description: 'Model id as the client reports it, e.g. claude-opus-5-5[1m], gpt-5.5, gemini-2.5-pro, qwen3:32b' },
@@ -98,6 +99,45 @@ export const TOOLS = [
     annotations: { title: 'Re-read provider pages', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   },
   {
+    name: 'trckr_budget_set',
+    title: 'Set a session budget',
+    description: 'Register a dollar cap and stop rule for one session, at its start. Trckr prices the session\'s real usage at list price; at warn_pct (default 80) the session\'s own budget check says wrap up, and at the cap it says stop and the coordinator is alerted. Calling again changes the cap. close=true ends the budget when the session is done.',
+    inputSchema: {
+      type: 'object',
+      required: ['session_id'],
+      properties: {
+        session_id: { type: 'string', description: 'The session to cap (the same id its turns are recorded under)' },
+        cap_usd: { type: 'number', exclusiveMinimum: 0, description: 'Dollar cap for the whole session' },
+        warn_pct: { type: 'integer', minimum: 1, maximum: 99, default: 80 },
+        stop_rule: { type: 'string', description: 'What stopping means for this session, e.g. "write a handoff shard and report"' },
+        label: { type: 'string', description: 'Readable name, e.g. the thread title' },
+        close: { type: 'boolean', description: 'true when the session is finished' },
+      },
+    },
+    annotations: { title: 'Set a session budget', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'trckr_budget',
+    title: 'Check a session budget',
+    description: 'Cheap per-turn check: spend so far, cap, percent and state (ok, warn, over). stop=true means make no more model calls. Pass usage with the session\'s cumulative token counts (from its own usage report) and Trckr prices it at list price first; leave it out when turns are recorded per turn.',
+    inputSchema: {
+      type: 'object',
+      required: ['session_id'],
+      properties: {
+        session_id: { type: 'string' },
+        usage: { type: 'object', description: 'Cumulative session usage', required: ['model'], properties: { ...TURN_PROPS, lane: { type: 'string' }, client: { type: 'string' } } },
+      },
+    },
+    annotations: { title: 'Check a session budget', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'trckr_budgets',
+    title: 'All session budgets',
+    description: 'Every open budget with spend, cap and state, over-budget first. For the coordinator.',
+    inputSchema: { type: 'object', properties: { include_closed: { type: 'boolean', default: false } } },
+    annotations: { title: 'All session budgets', ...READ },
+  },
+  {
     name: 'trckr_ingest_key',
     title: 'Mint a hook key',
     description: 'Create a key for the per-turn hook (POST /v1/turns). The key is shown once; only its hash is stored. Put it in Keymaker as TRCKR_INGEST_KEY.',
@@ -145,6 +185,7 @@ function sinceFrom(args, defDays) {
 }
 
 export function createMcp({ store, tenant, fetchImpl, canRefresh = true }) {
+  const budgets = createBudgets({ store });
   const handlers = {
     async trckr_prices(a) {
       const want = a.provider ? SOURCES.filter((s) => s.id === a.provider) : SOURCES;
@@ -187,7 +228,34 @@ export function createMcp({ store, tenant, fetchImpl, canRefresh = true }) {
     async trckr_record_turn(a) {
       const p = await priceTurn(store, a);
       const id = await store.recordTurn(tenant, { lane: a.lane, request_id: a.request_id, session_id: a.session_id, client: a.client }, p);
-      return ok(`Recorded on ${a.lane}.\n${turnText(p)}`, { id, ...p });
+      const budget = a.session_id ? await budgets.evaluate(tenant, a.session_id) : null;
+      return ok(`Recorded on ${a.lane}.\n${turnText(p)}${budget ? `\n${budgetText(budget)}` : ''}`, { id, ...p, budget });
+    },
+
+    async trckr_budget_set(a) {
+      if (a.close) {
+        const b = await budgets.close(tenant, a.session_id);
+        return b ? ok(budgetText(b), b) : fail(`No budget for session ${a.session_id}.`);
+      }
+      const b = await budgets.set(tenant, a);
+      return ok(`Cap set. ${budgetText(b)}`, b);
+    },
+
+    async trckr_budget(a) {
+      if (a.usage) await budgets.rollup(tenant, a.session_id, a.usage);
+      const b = await budgets.evaluate(tenant, a.session_id);
+      if (!b) return ok(`No budget for session ${a.session_id}. Set one with trckr_budget_set.`, { session_id: a.session_id, state: 'none', stop: false, warn: false });
+      return ok(budgetText(b), b);
+    },
+
+    async trckr_budgets(a) {
+      const rows = await store.listBudgets(tenant, { active: !a.include_closed });
+      const list = [];
+      for (const r of rows) list.push(await budgets.evaluate(tenant, r.session_id));
+      const rank = { over: 0, warn: 1, ok: 2, closed: 3 };
+      list.sort((x, y) => rank[x.state] - rank[y.state] || y.pct - x.pct);
+      if (!list.length) return ok('No open budgets.', { budgets: [] });
+      return ok(list.map((b) => `${b.state.toUpperCase()}  ${b.label || b.session_id}: ${budgetText(b).replace(/^[^.]*\. /, '')}`).join('\n'), { budgets: list });
     },
 
     async trckr_session(a) {

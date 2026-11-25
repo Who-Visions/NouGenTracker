@@ -15,8 +15,10 @@
   "workers_dev": false,
   "routes": [{ "pattern": "trckr.nougenai.com", "custom_domain": true }],
   "observability": { "enabled": true },
-  // Every provider page is re-read every 30 minutes; an unchanged page writes nothing.
-  "triggers": { "crons": ["*/30 * * * *"] },
+  // Provider pages are re-read every 30 minutes (an unchanged page writes nothing); the budget
+  // watcher runs every 5 and needs no model. Optional TRCKR_ALERT_URL (+ TRCKR_ALERT_TOKEN secret)
+  // receives one POST per batch of sessions that hit their cap.
+  "triggers": { "crons": ["*/30 * * * *", "*/5 * * * *"] },
   "d1_databases": [
     { "binding": "DB", "database_name": "nougen-trckr", "database_id": "bdc6d9b6-f564-4498-9f53-2beaab72b197", "migrations_dir": "migrations" }
   ],
@@ -32,7 +34,7 @@
       "name": "nougen-trckr-preview",
       "workers_dev": true,
       "routes": [],
-      "triggers": { "crons": ["*/30 * * * *"] },
+      "triggers": { "crons": ["*/30 * * * *", "*/5 * * * *"] },
       "d1_databases": [
         { "binding": "DB", "database_name": "nougen-trckr-preview", "database_id": "REPLACE_WITH_PREVIEW_D1_ID", "migrations_dir": "migrations" }
       ],

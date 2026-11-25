@@ -135,6 +135,8 @@ export function createStore(db) {
       if (until) where.push('at < ?'), args.push(until);
       if (session_id) where.push('session_id = ?'), args.push(session_id);
       if (lane) where.push('lane = ?'), args.push(lane);
+      // A session rollup (cumulative usage for budgets) counts only when the session has no per-turn rows.
+      where.push(`NOT ((status = 'session_rollup' OR request_id LIKE 'rollup:%') AND EXISTS (SELECT 1 FROM turns t2 WHERE t2.owner = turns.owner AND t2.session_id = turns.session_id AND t2.status != 'session_rollup' AND t2.request_id NOT LIKE 'rollup:%'))`);
       const rows = await all(
         `SELECT ${key} AS k, COUNT(*) AS turns,
            SUM(input_tokens) AS input, SUM(output_tokens) AS output, SUM(cache_read_tokens) AS cache_read,
@@ -178,6 +180,69 @@ export function createStore(db) {
       const value = btoa(String.fromCharCode(...raw)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
       await run("INSERT OR IGNORE INTO settings (key, value, created_at) VALUES ('signing_secret', ?, ?)", value, new Date().toISOString());
       return (await first("SELECT value FROM settings WHERE key = 'signing_secret'")).value;
+    },
+
+    // Session spend for budgets: per-turn rows summed, or a session rollup row (cumulative usage,
+    // request_id 'rollup:...' or status 'session_rollup'), whichever is larger, so the two never double count.
+    async sessionSpend(owner, session_id) {
+      const row = await first(
+        `SELECT COALESCE(SUM(CASE WHEN r = 0 THEN cost_nano END), 0) AS turn_nano,
+                COALESCE(MAX(CASE WHEN r = 1 THEN cost_nano END), 0) AS rollup_nano,
+                COALESCE(SUM(CASE WHEN cost_nano IS NULL THEN 1 ELSE 0 END), 0) AS unpriced,
+                COUNT(*) AS turns, MAX(at) AS last_at
+           FROM (SELECT cost_nano, at, (status = 'session_rollup' OR request_id LIKE 'rollup:%') AS r
+                   FROM turns WHERE owner = ? AND session_id = ?)`,
+        owner, session_id,
+      );
+      return { spent_nano: Math.max(Number(row?.turn_nano || 0), Number(row?.rollup_nano || 0)), unpriced: Number(row?.unpriced || 0), turns: Number(row?.turns || 0), last_at: row?.last_at || null };
+    },
+
+    async getBudget(owner, session_id) {
+      return first('SELECT * FROM budgets WHERE owner = ? AND session_id = ?', owner, session_id);
+    },
+
+    async upsertBudget(owner, b, at) {
+      await run(
+        `INSERT INTO budgets (owner, session_id, label, cap_nano, warn_pct, stop_rule, state, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'ok', ?, ?)
+         ON CONFLICT(owner, session_id) DO UPDATE SET label = COALESCE(excluded.label, label), cap_nano = excluded.cap_nano,
+           warn_pct = excluded.warn_pct, stop_rule = COALESCE(excluded.stop_rule, stop_rule),
+           state = CASE WHEN state = 'closed' THEN 'ok' ELSE state END, updated_at = excluded.updated_at`,
+        owner, b.session_id, b.label || null, b.cap_nano, b.warn_pct, b.stop_rule || null, at, at,
+      );
+    },
+
+    async saveBudgetState(owner, session_id, s, at) {
+      await run(
+        `UPDATE budgets SET state = ?, spent_nano = ?, unpriced = ?, checked_at = ?,
+           warned_at = COALESCE(?, warned_at), over_at = COALESCE(?, over_at), updated_at = ?
+         WHERE owner = ? AND session_id = ?`,
+        s.state, s.spent_nano, s.unpriced, at, s.warned_at || null, s.over_at || null, at, owner, session_id,
+      );
+    },
+
+    async addBudgetEvent(owner, session_id, kind, spent_nano, cap_nano, at) {
+      await run('INSERT INTO budget_events (owner, session_id, at, kind, spent_nano, cap_nano) VALUES (?, ?, ?, ?, ?, ?)', owner, session_id, at, kind, spent_nano, cap_nano);
+    },
+
+    async listBudgets(owner, { active = true, limit = 100 } = {}) {
+      return all(`SELECT * FROM budgets WHERE owner = ? ${active ? "AND state != 'closed'" : ''} ORDER BY updated_at DESC LIMIT ?`, owner, limit);
+    },
+
+    async budgetOwners() {
+      return (await all("SELECT DISTINCT owner FROM budgets WHERE state != 'closed'")).map((r) => r.owner);
+    },
+
+    async pendingBudgetAlerts(limit = 50) {
+      return all(
+        `SELECT e.*, b.label, b.stop_rule FROM budget_events e LEFT JOIN budgets b ON b.owner = e.owner AND b.session_id = e.session_id
+          WHERE e.kind = 'over' AND e.notified_at IS NULL ORDER BY e.id LIMIT ?`,
+        limit,
+      );
+    },
+
+    async markBudgetAlerts(ids, at) {
+      for (const id of ids) await run('UPDATE budget_events SET notified_at = ? WHERE id = ?', at, id);
     },
 
     async createIngestKey(owner, label, keyHash) {
