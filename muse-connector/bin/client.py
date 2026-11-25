@@ -1,22 +1,112 @@
 #!/usr/bin/env python3
-"""Copy and configure this CLI for one registered, header-authenticated MCP."""
+"""Muse client for the NouGen//Trckr MCP server at trckr.nougenai.com.
+
+Speaks Streamable HTTP JSON-RPC to the live Trckr server: list the tool
+catalog (`list-tools`) or call one registered tool (`call-tool`) with its
+arguments as a JSON object in a file. The server holds the credential; this
+client only carries the Muse surrogate for the registered provider.
+
+Secrets never reach stdout: `trckr_ingest_key` is not an allowed tool, and
+every result is passed through `redact_secrets` before printing, so a key,
+token or password in any field — including inside an error result — is
+replaced with `[REDACTED]`. Nothing in this client writes a secret to a
+file; minting ingest keys is out of scope here.
+"""
 
 import argparse
 import json
 from pathlib import Path
+import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
-sys.path.insert(0, "/opt/muse/skills/custom-connector-setup/bin")
-from dynamic_credentials import DynamicCredentialError, add_surrogate_to_request
+try:
+    sys.path.insert(0, "/opt/muse/skills/custom-connector-setup/bin")
+    from dynamic_credentials import DynamicCredentialError, add_surrogate_to_request
+except ImportError as error:
+    print(
+        "error: Muse connector helper not found "
+        f"(/opt/muse/skills/custom-connector-setup/bin/dynamic_credentials.py: {error}); "
+        "the Trckr connector cannot attach its credential",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
 
 
 PROVIDER = "custom.trckr-nougenai"
 ENDPOINT = "https://trckr.nougenai.com/mcp"
-ALLOWED_TOOLS: set[str] = {'trckr_prices', 'trckr_price', 'trckr_turn_cost', 'trckr_record_turn', 'trckr_session', 'trckr_usage', 'trckr_pools', 'trckr_refresh', 'trckr_ingest_key'}
+# trckr_ingest_key is deliberately NOT here: it mints ingest keys, and a
+# minted key must never be printed to stdout, a transcript or a log.
+# Minting keys is out of scope for this client.
+ALLOWED_TOOLS: set[str] = {'trckr_prices', 'trckr_price', 'trckr_turn_cost', 'trckr_record_turn', 'trckr_session', 'trckr_usage', 'trckr_pools', 'trckr_refresh'}
 PROTOCOLS = {"2025-11-25", "2025-06-18", "2025-03-26"}
+
+# Total wall-clock deadline for one MCP request, seconds. This is separate
+# from the per-socket-operation timeout passed to urlopen: a stream that
+# trickles keepalives forever is cut off here.
+REQUEST_TIMEOUT = 45
+# How much of an HTTP error body may be inspected, bytes.
+ERROR_BODY_LIMIT = 2048
+# How much of a JSON-RPC error message may be shown, characters.
+ERROR_MESSAGE_LIMIT = 200
+
+_SECRET_FIELD = re.compile(r"key|secret|token|password|credential", re.IGNORECASE)
+_INGEST_KEY_PREFIX = "trk_"
+
+
+def redact_secrets(value):
+    """Recursively replace secret-looking values with ``[REDACTED]``.
+
+    A dict value is redacted when its field name looks secret-bearing
+    (key/secret/token/password/credential) or when a string value starts
+    with the Trckr ingest-key prefix ``trk_``. Everything else passes
+    through unchanged, so prices, token counts and usage figures are
+    never altered. Apply to every result before printing — including
+    ``isError`` results, which may echo a server-side value.
+    """
+    if isinstance(value, dict):
+        return {
+            field: "[REDACTED]"
+            if _SECRET_FIELD.search(field)
+            else redact_secrets(item)
+            for field, item in value.items()
+        }
+    if isinstance(value, list):
+        return [redact_secrets(item) for item in value]
+    if isinstance(value, str) and value.startswith(_INGEST_KEY_PREFIX):
+        return "[REDACTED]"
+    return value
+
+
+def safe_http_error_detail(error):
+    """Return a safe, bounded detail for an HTTPError, or ``""``.
+
+    Reads at most ~2 KB of the error body and reports it only when it
+    matches a known non-secret pattern: a Cloudflare ``error code: 1010``
+    (the edge user-agent ban, which this client works around with a
+    browser User-Agent) or a JSON ``error`` field. Any other body is
+    discarded, and headers are never echoed — an error body or header
+    must never become a channel for a credential to reach a log.
+    """
+    try:
+        raw = error.read(ERROR_BODY_LIMIT)
+    except Exception:
+        return ""
+    if not raw:
+        return ""
+    text = raw.decode("utf-8", "replace")
+    if "error code: 1010" in text.lower():
+        return "; Cloudflare error code: 1010 (edge user-agent ban)"
+    try:
+        parsed = json.loads(text)
+    except ValueError:
+        return ""
+    if isinstance(parsed, dict) and isinstance(parsed.get("error"), str) and parsed["error"]:
+        return f"; server error: {parsed['error'][:ERROR_MESSAGE_LIMIT]}"
+    return ""
 
 
 class McpError(RuntimeError):
@@ -49,6 +139,7 @@ class Client:
         self.sequence = 0
 
     def send(self, method, params, *, notification=False):
+        deadline = time.monotonic() + REQUEST_TIMEOUT
         self.sequence += 1
         request_id = None if notification else self.sequence
         body = {"jsonrpc": "2.0", "method": method, "params": params}
@@ -70,7 +161,7 @@ class Client:
         request = urllib.request.Request(ENDPOINT, data=encoded, headers=headers, method="POST")
         add_surrogate_to_request(request, PROVIDER, allowed_hosts=[self.host])
         try:
-            with self.opener.open(request, timeout=45) as response:
+            with self.opener.open(request, timeout=REQUEST_TIMEOUT) as response:
                 if session := response.headers.get("Mcp-Session-Id"):
                     if not all(33 <= ord(c) <= 126 for c in session):
                         raise McpError("MCP server returned an invalid session header")
@@ -79,9 +170,12 @@ class Client:
                     return None
                 if notification:
                     raise McpError("MCP server did not accept the initialization notification")
-                return self.read_result(response, request_id)
+                return self.read_result(response, request_id, deadline)
         except urllib.error.HTTPError as error:
-            raise McpError(f"MCP returned HTTP {error.code}; the operation was not replayed") from None
+            detail = safe_http_error_detail(error)
+            raise McpError(
+                f"MCP returned HTTP {error.code}{detail}; the operation was not replayed"
+            ) from None
         except (urllib.error.URLError, TimeoutError, OSError):
             raise McpError("MCP request did not complete; check any write before retrying") from None
 
@@ -93,23 +187,37 @@ class Client:
         if type(message.get("id")) is not int or message["id"] != request_id:
             return None
         if "error" in message:
+            error = message["error"]
+            if isinstance(error, dict):
+                code = error.get("code")
+                text = error.get("message")
+                detail = ""
+                if code is not None:
+                    detail += f" code {code}"
+                if isinstance(text, str) and text:
+                    detail += f": {text[:ERROR_MESSAGE_LIMIT]}"
+                raise McpError(f"MCP returned a JSON-RPC error{detail}; the operation was not replayed")
             raise McpError("MCP returned a JSON-RPC error; the operation was not replayed")
         if not isinstance(message.get("result"), dict):
             raise McpError("MCP returned no result object")
         return message["result"]
 
     @classmethod
-    def read_result(cls, response, request_id):
+    def read_result(cls, response, request_id, deadline=None):
         content_type = response.headers.get_content_type()
         if content_type == "application/json":
             result = cls.decode(response.read(), request_id)
             if result is None:
                 raise McpError("MCP returned the wrong request ID")
+            if deadline is not None and time.monotonic() > deadline:
+                raise McpError("MCP request exceeded the total deadline; the operation was not replayed")
             return result
         if content_type != "text/event-stream":
             raise McpError("MCP returned an unsupported content type")
         data = []
         while True:
+            if deadline is not None and time.monotonic() > deadline:
+                raise McpError("MCP request exceeded the total deadline; the operation was not replayed")
             line = response.readline()
             if not line:
                 raise McpError("MCP event stream ended before the matching result")
@@ -162,7 +270,7 @@ def main():
         result = client.send("tools/list", {"cursor": args.cursor} if args.cursor else {})
     else:
         result = client.send("tools/call", {"name": args.name, "arguments": arguments})
-    print(json.dumps(result, ensure_ascii=False))
+    print(json.dumps(redact_secrets(result), ensure_ascii=False))
     return 1 if result.get("isError") else 0
 
 

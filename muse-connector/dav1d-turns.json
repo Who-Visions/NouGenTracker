@@ -1,10 +1,20 @@
 {
-  "lane": "meta-app",
-  "model": "muse-spark",
-  "note": "Dav1d/Muse Spark turns are not reported to Trckr by Meta. Recorded manually per turn from session_status estimated_prompt_tokens delta. Model is unpriced in Trckr (not on Anthropic/OpenAI/Google/OpenRouter pages), so cost is always null/$0 — tokens only.",
-  "last_context_tokens": 230680,
-  "last_recorded_at": "2026-11-25T06:48:30Z",
-  "last_record_id": "5fde6115cdc6f0eec0cb84dc5c7e35d1",
-  "last_request_id": "req:fallback:0336e150-d54d-4786-9a87-42d53135f216",
-  "baseline_note": "First record was 0 tokens (no per-turn split available). Baseline context 230680 set 2026-11-25 01:48 EST; future turns record the delta."
+  "compaction_rule": "When the window shrinks (compaction), estimated_context_growth_tokens is null and compaction_detected is true. A negative delta is flagged, never silently recorded.",
+  "cost_rule": "cost_usd is always null with unpriced_reason. Muse Spark is unpriced in Trckr (not on the providers' pricing pages), so cost is null, never 0 \u2014 $0 is reserved for self-hosted runs. Shipping unpriced is acceptable; inventing a price is not.",
+  "example": true,
+  "example_record": {
+    "compaction_detected": false,
+    "context_tokens": 230680,
+    "cost_usd": null,
+    "estimated_context_growth_tokens": null,
+    "kind": "estimated_context_growth",
+    "lane": "meta-app",
+    "model": "muse-spark",
+    "note": "first record: growth unknown, not zero",
+    "unpriced_reason": "muse-spark is unpriced in Trckr (not on the providers' pricing pages); cost is null with this reason, never 0 \u2014 $0 is reserved for self-hosted runs"
+  },
+  "kind": "dav1d-turns-schema-example",
+  "method": "estimated_context_growth: the context-window size is recorded whole as context_tokens (the input figure until Meta exposes real per-turn usage). estimated_context_growth_tokens is the window's growth since the previous record \u2014 an estimate, NOT a turn's input/output/cache split and NOT turn tokens. Every turn re-bills the full context, so the delta understates real input processing; do not price from this file or from any delta in it.",
+  "note": "SCHEMA / EXAMPLE ONLY \u2014 this file holds no live turn records and no mutable runtime state. Dav1d/Muse Spark turns are not reported to Trckr by Meta; records are built by muse-connector/bin/turns.py (growth_record) from session_status context-window sizes. Runtime state (previous context size, last record/request ids, timestamps) lives in the gitignored muse-connector/state/dav1d-turns.json or in Trckr itself via trckr_session \u2014 never in this file.",
+  "open_item": "The first live ledger record (id 5fde6115cdc6f0eec0cb84dc5c7e35d1) was written with 0 tokens \u2014 a junk row from before this method existed. It still needs to be voided or annotated in Trckr by someone with live ledger access; this repo cannot do it."
 }
