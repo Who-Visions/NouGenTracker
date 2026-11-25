@@ -46,11 +46,14 @@ def test_text_shadow_bill_uses_catalog_fallback(model, rates):
 
 def test_no_nan_negative_or_missing_provenance_in_catalog():
     data = catalog.load_catalog()
-    assert len(data["models"]) == 183
-    assert len(data["aliases"]) == 84
+    # 185 models / 89 aliases: +2 Muse Spark records (Standard, Contributor,
+    # verified 2026-11-25) and +5 Muse Spark alias spellings (slash + hyphenated).
+    assert len(data["models"]) == 185
+    assert len(data["aliases"]) == 89
     for record in data["models"].values():
         assert record["source_url"].startswith("https://")
-        assert record["verified_on"] == "2026-09-29"
+        # The 2026-09-29 snapshot; Muse Spark rows were verified later, 2026-11-25.
+        assert record["verified_on"] in ("2026-09-29", "2026-11-25")
         for rates in record["rates"].values():
             assert all(math.isfinite(rate) and rate >= 0 for rate in rates.values())
 

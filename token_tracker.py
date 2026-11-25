@@ -421,6 +421,21 @@ MODEL_PRICING = {
     # The model Codex actually reports; absent, every Codex log billed at $1/$4.
     "gpt-5.3-codex":              (1.75, 14.00, 0.175, DOC),
     "chat-latest":                (5.00, 30.00, 0.500, DOC),
+    # ---- Meta (Muse Spark): first-party list prices, Meta Model API ----
+    # Verified 2026-11-25 (Standard $1.25/$4.25/$0.15, Contributor
+    # $0.10/$0.20/$0.002 per MTok). Without these rows Muse billed at the
+    # $1/$4 unknown-model default — the same silent undercount that hit
+    # claude-opus-5 (255M tokens) before its row existed.
+    "muse-spark-1.3":             (1.25, 4.25, 0.15, DOC),
+    "muse-spark":                 (1.25, 4.25, 0.15, DOC),
+    "meta/muse-spark":            (1.25, 4.25, 0.15, DOC),
+    # Hyphenated spellings: price_for() normalizes "/" to "-", so
+    # "meta/muse-spark" arrives here as "meta-muse-spark". Both spellings
+    # must resolve; the repo carries no other slash keys.
+    "meta-muse-spark":            (1.25, 4.25, 0.15, DOC),
+    "muse-spark-1.3-contributor": (0.10, 0.20, 0.002, DOC),
+    "meta/muse-spark-contributor": (0.10, 0.20, 0.002, DOC),
+    "meta-muse-spark-contributor": (0.10, 0.20, 0.002, DOC),
 }
 # Sourced catalog supersedes older constants and adds every published model.
 # Non-text modalities retain their own units in pricing_catalog, not this bill.
@@ -574,6 +589,59 @@ def model_bill(model_name, d, when=None):
     )
     return float(cost), src
 
+
+def session_cost(session_id, invocations=None):
+    """USD cost of one session from its per-request token splits.
+
+    invocations: ALL_INVOCATIONS-style rows (session_id, model, input_tokens,
+    output_tokens, cache_creation, cache_read, reasoning). Defaults to this
+    process's ALL_INVOCATIONS. Returns (total_usd, by_model, rows, unpriced):
+    by_model maps model -> {"requests", "cost_usd"}; rows carry each request's
+    own cost; unpriced lists requests whose model has no rate (cost $0, never
+    folded into another model's rate).
+    """
+    rows = [r for r in (ALL_INVOCATIONS if invocations is None else invocations)
+            if r.get("session_id") == session_id]
+    total = 0.0
+    by_model = {}
+    priced_rows = []
+    unpriced = []
+    for r in rows:
+        bucket = {
+            "input_tokens": r.get("input_tokens", 0),
+            "cache_creation_input_tokens": r.get("cache_creation", 0),
+            "cache_read_input_tokens": r.get("cache_read", 0),
+            "output_tokens": r.get("output_tokens", 0),
+            "reasoning_tokens": r.get("reasoning", 0),
+        }
+        cost, src = model_bill(r.get("model", "unknown"), bucket)
+        if cost is None:
+            unpriced.append(r)
+            continue
+        total += cost
+        m = by_model.setdefault(r.get("model", "unknown"), {"requests": 0, "cost_usd": 0.0})
+        m["requests"] += 1
+        m["cost_usd"] += cost
+        priced_rows.append({**r, "cost_usd": cost, "pricing_source": src})
+    return total, by_model, priced_rows, unpriced
+
+
+def muse_window_bounds(window_tokens):
+    """Labeled bounds for a context-window token total. NOT a bill.
+
+    A window total counts each context token once, but billing re-reads context
+    every turn, so the true per-request sum is larger and its split is unknown
+    from the window alone. all_cached is the floor, all_output the ceiling.
+    """
+    n = max(0, int(window_tokens))
+    inp, out, cache_read, _src = MODEL_PRICING["muse-spark-1.3"]
+    return {
+        "window_tokens": n,
+        "all_cached_input_usd": n * cache_read / 1_000_000,
+        "all_fresh_input_usd": n * inp / 1_000_000,
+        "all_output_usd": n * out / 1_000_000,
+        "label": "bounds, not a bill: the true per-request sum is above the all-cached floor",
+    }
 
 
 def fold_openai_usage(usage):
