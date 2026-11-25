@@ -1,0 +1,121 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-25",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 0,
+    "cache_read": 1898624,
+    "input_tokens": 9482,
+    "output_tokens": 982,
+    "reasoning": 25
+  },
+  "generated_at": "2026-11-25T01:38:13-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 20,
+  "machine": "phoebus",
+  "models": {
+    "<synthetic>": {
+      "cache_creation": 0,
+      "cache_read": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "reasoning": 0
+    },
+    "gpt-6.1-sol": {
+      "cache_creation": 0,
+      "cache_read": 1898624,
+      "input_tokens": 9482,
+      "output_tokens": 982,
+      "reasoning": 25
+    }
+  },
+  "partial": true,
+  "provider_stats": {
+    "Claude Code": {
+      "cache_hit_ratio": 0.0,
+      "cache_write_tokens": 0,
+      "distinct_sessions": 1,
+      "peak_context_used_percent": 0.0,
+      "plan_types": [],
+      "rate_limits": {},
+      "total_tokens": 0,
+      "uncached_input_tokens": 0
+    },
+    "OpenAI Codex": {
+      "cache_hit_ratio": 0.995,
+      "distinct_sessions": 1,
+      "peak_context_used_percent": 27.48,
+      "plan_types": [
+        "plus"
+      ],
+      "rate_limits": {
+        "primary": {
+          "latest_used_percent": 3.0,
+          "peak_used_percent": 3.0,
+          "resets_at": 1795600757,
+          "window_minutes": 300
+        },
+        "secondary": {
+          "latest_used_percent": 46.0,
+          "peak_used_percent": 46.0,
+          "resets_at": 1795630000,
+          "window_minutes": 10080
+        }
+      },
+      "total_tokens": 1909113,
+      "uncached_input_tokens": 9482
+    }
+  },
+  "schema": 3,
+  "sketch": [
+    "14f79d3c42d347c1",
+    "2e1f4515db0e8777",
+    "41a027063f68daa5",
+    "54b692553019ebfd",
+    "5ae1bbdd54f4a327",
+    "6bce3a6ba43d5478",
+    "8ab2eb3768484edc",
+    "9073bcecba1a71fe",
+    "90cf187a08497dd9",
+    "93deb040a574a6bc",
+    "958b7d6aad5cb005",
+    "97349b4f43287811",
+    "99b6b121e76736b2",
+    "b25942367395120c",
+    "cd09a64cfef23482",
+    "d69e385e37e70f50",
+    "e3bd17ec2d29a1c3",
+    "e62593a2dad7a70f",
+    "fb2c5ac4fefaef19",
+    "ff76a95921d6f855"
+  ],
+  "sources": {
+    "Claude Code": {
+      "cache_creation": 0,
+      "cache_read": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "reasoning": 0
+    },
+    "OpenAI Codex": {
+      "cache_creation": 0,
+      "cache_read": 1898624,
+      "input_tokens": 9482,
+      "output_tokens": 982,
+      "reasoning": 25
+    }
+  },
+  "totals": {
+    "cache_creation": 0,
+    "cache_read": 1898624,
+    "input_tokens": 9482,
+    "output_tokens": 982,
+    "reasoning": 25
+  }
+}
