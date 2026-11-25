@@ -1377,8 +1377,8 @@ def resolve_historical_cache_price(
     """
     if when is None:
         return None
-    day = when.strftime("%Y-%m-%d") if hasattr(when, "strftime") else str(when)[:10]
-    if len(day) != 10:
+    day = _validated_day(when)
+    if day is None:
         return None
 
     path = cache_path or get_cache_path()
@@ -1571,8 +1571,70 @@ def _check_env_override(key: str) -> tuple | None:
     return None
 
 
+_DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+# FAR-FUTURE RULE (2026-11-25, PR #50 follow-up): how far past today a dated
+# lookup may reach. An open-ended band covers real future dates — a published
+# transition such as 2027-01-01 must keep resolving — but a day more than this
+# many days past today cannot be a real usage day; it is a typo (2099) or
+# garbage. Past that horizon the schedule answers None and the caller falls
+# back to the flat table, instead of silently billing at the highest
+# published rate forever. 366 days keeps every currently published
+# transition resolving (latest: 2027-01-01) while rejecting typo years.
+_SCHEDULE_FUTURE_HORIZON_DAYS = 366
+
+
+def _validated_day(when) -> str | None:
+    """The one validated `when` boundary for dated pricing.
+
+    Accepts only a `date`/`datetime` or a strict `YYYY-MM-DD` string, and
+    returns the day as an ISO `YYYY-MM-DD` string, or None for everything
+    else. This is the fix for the PR #50 resolver hole: the old code did
+    `str(when)[:10]` and compared lexicographically, so any garbage string
+    ("not-a-date"), list, dict, set, or bytes object whose `str()` starts
+    past "2" sorted into the newest open-ended band and billed at the
+    highest rate. Nothing unvalidated reaches a band compare anymore.
+
+    - tz-aware datetimes are normalized to their UTC day first: a price
+      change effective at UTC midnight must bill the same instant the same
+      way regardless of the spelling's timezone (23:30 EST on 2026-11-30
+      is 2026-12-01 in UTC). Naive datetimes keep their own wall-clock day.
+    - strings must match `YYYY-MM-DD` exactly AND be a real calendar day
+      ("2026-13-40", "2027-02-30", "2026-12-01 ", "20261201", and
+      "2026-12-01T00:00:00" are all rejected, not sliced into a day).
+    - ints/floats (epochs), bools, lists, dicts, sets, bytes, and objects
+      with a hostile `__str__` are rejected: epochs are `_row_when`'s job
+      (it converts them to datetimes first); the resolver is day-granular.
+    """
+    if when is None:
+        return None
+    if isinstance(when, datetime.datetime):
+        if when.tzinfo is not None:
+            when = when.astimezone(datetime.timezone.utc)
+        return when.date().isoformat()
+    if isinstance(when, datetime.date):
+        return when.isoformat()
+    if isinstance(when, str):
+        if not _DAY_RE.match(when):
+            return None
+        try:
+            datetime.date.fromisoformat(when)
+        except ValueError:
+            return None
+        return when
+    return None
+
+
 def _lookup_price_schedule(price_schedule: dict, key: str, when) -> tuple | None:
-    """Lookup dated price schedule entries."""
+    """Lookup dated price schedule entries.
+
+    `when` is validated by `_validated_day` (see above): only a real
+    `date`/`datetime` or a strict `YYYY-MM-DD` string reaches the band
+    compare, tz-aware datetimes bill on their UTC day, and a day more
+    than 366 days past today is far-future, not a real usage day — it
+    returns None so the caller falls back to the flat table instead of
+    billing at the highest published rate.
+    """
     if not price_schedule or when is None:
         return None
     entries = price_schedule.get(key)
@@ -1581,8 +1643,10 @@ def _lookup_price_schedule(price_schedule: dict, key: str, when) -> tuple | None
         entries = price_schedule.get(alt_key)
     if not entries:
         return None
-    day = when.strftime("%Y-%m-%d") if hasattr(when, "strftime") else str(when)[:10]
-    if len(day) != 10:
+    day = _validated_day(when)
+    if day is None:
+        return None
+    if day > (datetime.date.today() + datetime.timedelta(days=_SCHEDULE_FUTURE_HORIZON_DAYS)).isoformat():
         return None
     for start, end, price in entries:
         if start <= day and (end is None or day <= end):
@@ -1601,6 +1665,14 @@ def resolve_exact_price(
     Returns (inp, out, cache_read, source_tag) or None."""
     if not key:
         return None
+
+    # Validate `when` ONCE, here, before any hop can see it: an invalid
+    # `when` (garbage string, far-future date, list/dict/bytes, ...) becomes
+    # None, i.e. undated, so the whole dated ladder — schedule lookup,
+    # historical cache, live-fetch gating — treats it exactly like a call
+    # with no date and falls back to the flat table. `_lookup_price_schedule`
+    # and `resolve_historical_cache_price` validate again for direct callers.
+    when = _validated_day(when)
 
     # Hop 1: Env override
     env_hit = _check_env_override(key)
@@ -1625,9 +1697,9 @@ def resolve_exact_price(
             if cached_sched is not None:
                 logger.info("[ladder hop 2] Cached schedule hit for %s at %s -> %s", key, when, cached_sched)
                 return cached_sched
-        day_str = when.strftime("%Y-%m-%d") if hasattr(when, "strftime") else str(when)[:10]
+        day_str = when  # already a validated YYYY-MM-DD string (see above)
         today_str = datetime.date.today().isoformat()
-        if not is_valid and len(day_str) == 10 and day_str >= today_str:
+        if not is_valid and day_str >= today_str:
             unattempted = [v for v, _ in VENDOR_SOURCES if v not in _ATTEMPTED_VENDORS]
             if unattempted:
                 fetched = fetch_all_vendors(cache_path=cache_path, baseline_pricing=fallback_pricing)
