@@ -368,3 +368,92 @@ def test_synthetic_and_thinking_variants_resolve():
     base = pricing_live.resolve_price("claude-opus-4-6", fallback_pricing={"claude-opus-4-6": (5.0, 25.0, 0.5)})
     think = pricing_live.resolve_price("claude-opus-4-6-thinking", fallback_pricing={"claude-opus-4-6": (5.0, 25.0, 0.5)})
     assert think[:3] == base[:3]
+
+
+# --- _lookup_price_schedule boundary (PR #50 follow-up, Jensen HOLE-FOUND) ---
+# The resolver trusted str(when)[:10] + a lexicographic band compare, so any
+# garbage whose str() starts past "2" landed in the newest open-ended band.
+# _validated_day is now the single boundary: only a real date/datetime or a
+# strict YYYY-MM-DD string reaches the compare. These pin the boundary
+# itself, below the price_for wrapper. Schedule under test:
+# gemini-4-carbon: 2026-01-01..2026-11-30 -> (2.00, 10.00, 0.10, doc);
+# 2026-12-01.. (open-ended) -> (4.00, 20.00, 0.20, doc).
+
+_SCHED = {
+    "gemini-4-carbon": [
+        ("2026-01-01", "2026-11-30", (2.00, 10.00, 0.100, pricing_live.DOC)),
+        ("2026-12-01", None, (4.00, 20.00, 0.200, pricing_live.DOC)),
+    ],
+}
+
+
+def test_lookup_rejects_garbage_and_non_date_when():
+    for bad in ("not-a-date", "", "2026-13-40", "2027-02-30", "2026-12-01 ",
+                "2026-12-01T00:00:00", "20261201", 12345.6, 1790000000,
+                ["2026-11-30"], {"date": "2026-11-30"}, {"2026-11-30"},
+                b"2026-11-30", ("2026-11-30",), True, None, object()):
+        assert pricing_live._lookup_price_schedule(_SCHED, "gemini-4-carbon", bad) is None
+
+
+def test_lookup_rejects_far_future_dates():
+    # Open-ended band covers real future dates, not typo years: a day more
+    # than 366 days past today is not a real usage day.
+    assert pricing_live._lookup_price_schedule(_SCHED, "gemini-4-carbon", "2099-12-31") is None
+    assert pricing_live._lookup_price_schedule(
+        _SCHED, "gemini-4-carbon",
+        datetime.datetime(2099, 12, 31, tzinfo=datetime.timezone.utc)) is None
+
+
+def test_lookup_accepts_real_days_including_near_future():
+    assert pricing_live._lookup_price_schedule(
+        _SCHED, "gemini-4-carbon", "2026-11-30")[:3] == (2.0, 10.0, 0.1)
+    assert pricing_live._lookup_price_schedule(
+        _SCHED, "gemini-4-carbon", "2026-12-01")[:3] == (4.0, 20.0, 0.2)
+    # A published transition a few weeks out is real, not far-future.
+    assert pricing_live._lookup_price_schedule(
+        _SCHED, "gemini-4-carbon", "2027-01-01")[:3] == (4.0, 20.0, 0.2)
+
+
+def test_lookup_normalizes_tz_aware_datetimes_to_the_utc_day():
+    est = datetime.timezone(datetime.timedelta(hours=-5))
+    plus14 = datetime.timezone(datetime.timedelta(hours=14))
+    # 23:30 EST 2026-11-30 == 04:30 UTC 2026-12-01: new era, both spellings.
+    assert pricing_live._lookup_price_schedule(
+        _SCHED, "gemini-4-carbon",
+        datetime.datetime(2026, 11, 30, 23, 30, tzinfo=est))[:3] == (4.0, 20.0, 0.2)
+    assert pricing_live._lookup_price_schedule(
+        _SCHED, "gemini-4-carbon",
+        datetime.datetime(2026, 12, 1, 4, 30, tzinfo=datetime.timezone.utc))[:3] == (4.0, 20.0, 0.2)
+    # Mirror: 00:30 +14 on 2026-12-01 is 10:30 UTC on 2026-11-30: old era.
+    assert pricing_live._lookup_price_schedule(
+        _SCHED, "gemini-4-carbon",
+        datetime.datetime(2026, 12, 1, 0, 30, tzinfo=plus14))[:3] == (2.0, 10.0, 0.1)
+    # Naive datetimes and date objects keep their own wall-clock day.
+    assert pricing_live._lookup_price_schedule(
+        _SCHED, "gemini-4-carbon",
+        datetime.datetime(2026, 11, 30, 23, 30))[:3] == (2.0, 10.0, 0.1)
+    assert pricing_live._lookup_price_schedule(
+        _SCHED, "gemini-4-carbon", datetime.date(2026, 12, 1))[:3] == (4.0, 20.0, 0.2)
+
+
+def test_lookup_rejects_a_hostile_str_object():
+    class Hostile:
+        def __str__(self):
+            return "2026-12-01"
+    assert pricing_live._lookup_price_schedule(_SCHED, "gemini-4-carbon", Hostile()) is None
+
+
+def test_historical_cache_lookup_rejects_garbage_when(clean_resolver_state, tmp_path):
+    # Same boundary hole lived in resolve_historical_cache_price: a garbage
+    # day compared lexicographically against snapshot dates and could match.
+    cache = tmp_path / "cache.json"
+    cache.write_text(json.dumps({
+        "fetched_at": "2026-11-01T00:00:00+00:00",
+        "models": {"gemini-4-carbon": [2.0, 10.0, 0.1]},
+        "history": [{"fetched_at": "2026-11-01T00:00:00+00:00",
+                     "models": {"gemini-4-carbon": [2.0, 10.0, 0.1]}}],
+    }), encoding="utf-8")
+    assert pricing_live.resolve_historical_cache_price(
+        "gemini-4-carbon", "not-a-date", cache_path=cache) is None
+    assert pricing_live.resolve_historical_cache_price(
+        "gemini-4-carbon", "2026-11-30", cache_path=cache) is not None
