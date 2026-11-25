@@ -30,3 +30,16 @@ jobs:
         run: python -m pytest -q
       - name: CLI smoke
         run: python token_tracker.py --help
+
+  trckr:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/trckr
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test (parsers, engine, OAuth, MCP, hook)
+        run: npm test
