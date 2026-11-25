@@ -3,9 +3,9 @@
   "date": "2026-11-25",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 20734515,
-    "input_tokens": 129407,
-    "output_tokens": 66078,
+    "cache_read": 33760955,
+    "input_tokens": 195164,
+    "output_tokens": 98216,
     "reasoning": 0
   },
   "exact": {
@@ -15,9 +15,9 @@
     "output_tokens": 0,
     "reasoning": 0
   },
-  "generated_at": "2026-11-25T14:54:14-05:00",
+  "generated_at": "2026-11-25T18:56:58-05:00",
   "generated_by": "claude-cli",
-  "invocations": 358,
+  "invocations": 482,
   "machine": "blade1tb",
   "models": {
     "<synthetic>": {
@@ -29,9 +29,16 @@
     },
     "Gemini 4 Carbon (Low) (estimated)": {
       "cache_creation": 0,
-      "cache_read": 17916614,
-      "input_tokens": 114728,
-      "output_tokens": 58300,
+      "cache_read": 18453323,
+      "input_tokens": 118800,
+      "output_tokens": 59260,
+      "reasoning": 0
+    },
+    "Gemini 4 Hydrogen (High) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 8868731,
+      "input_tokens": 54048,
+      "output_tokens": 30017,
       "reasoning": 0
     },
     "Gemini 4 Neon (Low) (estimated)": {
@@ -40,6 +47,13 @@
       "input_tokens": 14679,
       "output_tokens": 7778,
       "reasoning": 0
+    },
+    "claude-opus-4-6-thinking (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 3621000,
+      "input_tokens": 7637,
+      "output_tokens": 1161,
+      "reasoning": 0
     }
   },
   "partial": true,
@@ -47,7 +61,7 @@
     "Claude Code": {
       "cache_hit_ratio": 0.0,
       "cache_write_tokens": 0,
-      "distinct_sessions": 66,
+      "distinct_sessions": 83,
       "peak_context_used_percent": 0.0,
       "plan_types": [],
       "rate_limits": {},
@@ -57,20 +71,27 @@
   },
   "schema": 3,
   "sketch": [
+    "00ce38628b3ee57f",
+    "00d57641e4eb6098",
     "013c1ef6251a3099",
     "017b69bb4a9daa8f",
     "0328fdc3c3007fe3",
     "052386b9e58e2313",
+    "058bb6c4d221b0d1",
     "05bd720d93b3a51b",
+    "05c388489a365a4c",
     "07448ed1f0f9be3f",
     "07ca3eb6bbc58c11",
+    "0837c12bf9611643",
     "08aa55197b00bc30",
     "08e65b7bc358e57e",
     "0ba703315da5962b",
+    "0bc1b6ab84059100",
     "0c306d029bb3059b",
     "0c4a61f440e16ad9",
     "0d19d870171ba00d",
     "0e0e60c4a9765994",
+    "0ec79e00980d3e2a",
     "0fe999378aa6867c",
     "10d335d0a90fee2a",
     "1126b1ee433a33cb",
@@ -83,13 +104,16 @@
     "1452461b21654d26",
     "14d1e637374b200e",
     "16f42303d3996259",
+    "17e9aee4387a82bf",
     "19ab3613862cfadc",
     "1ac66c764cb17e70",
     "1b2ba7d073cc479c",
     "1c5d649006ce0a01",
     "1ce9b4325a8cae12",
     "1cfe934548a47bf7",
+    "1cffca6cddd07350",
     "1dba599404cbbf74",
+    "1e2ff2a973c540d8",
     "1e715fe469362559",
     "1f5b9e6e0ac4612f",
     "1f625610a9288d05",
@@ -98,7 +122,10 @@
     "20a985965cebdb97",
     "218d22d7cd99a6ad",
     "234527b9408b70f9",
+    "2376177af6c3dde9",
+    "23f2bb0aa92f442d",
     "255b907469f10dc4",
+    "25e0d053f0f5cbc7",
     "2605659cda30d6ab",
     "2655a9f31604fd65",
     "26ac834710487804",
@@ -106,28 +133,15 @@
     "27952a9edd717c75",
     "28658ffa8408777d",
     "286dfe35f784501e",
-    "29f7256f30ad8100",
-    "2a6af25b948f5765",
-    "2a7d7f4e68f65bbe",
-    "2ab7fd309fa8a81f",
-    "2af24ca3b420eef1",
-    "2b1ae2ab5ebfb85b",
-    "2b466cf543a3683f",
-    "2b7155a9f393cec3",
-    "2ba1763db65a9a2d",
-    "2c2f7f71be2d5068",
-    "2c37d5388f843cd9",
-    "2e80df13afd28fc3",
-    "2f0cfd933d91c78f",
-    "3078b120fc116473",
-    "310f6bbe9a799ca0"
+    "28f5f314af0463ac",
+    "295f30562f18c2bf"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 20734515,
-      "input_tokens": 129407,
-      "output_tokens": 66078,
+      "cache_read": 33760955,
+      "input_tokens": 195164,
+      "output_tokens": 98216,
       "reasoning": 0
     },
     "Claude Code": {
@@ -140,9 +154,9 @@
   },
   "totals": {
     "cache_creation": 0,
-    "cache_read": 20734515,
-    "input_tokens": 129407,
-    "output_tokens": 66078,
+    "cache_read": 33760955,
+    "input_tokens": 195164,
+    "output_tokens": 98216,
     "reasoning": 0
   }
 }
