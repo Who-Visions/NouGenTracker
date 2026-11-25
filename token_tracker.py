@@ -590,15 +590,48 @@ def model_bill(model_name, d, when=None):
     return float(cost), src
 
 
+def _row_when(row):
+    """Timestamp a row bills at, normalized for the pricing resolver.
+
+    Real rows carry a tz-aware datetime; hand-built rows may carry a
+    YYYY-MM-DD string or an epoch. Anything unparseable falls back to
+    None, which prices at today's flat rate — the same as a row with no
+    timestamp at all. Strings are parsed, not trusted: the resolver
+    compares the first 10 characters lexicographically, so a garbage
+    string like "not-a-date" would otherwise sort into an open-ended
+    band and bill at the wrong era's rate. Never raise out of pricing.
+    """
+    ts = row.get("timestamp")
+    if ts is None:
+        return None
+    if isinstance(ts, (int, float)):
+        try:
+            return datetime.fromtimestamp(ts, tz=timezone.utc)
+        except (ValueError, OverflowError, OSError):
+            return None
+    if isinstance(ts, str):
+        try:
+            return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    return ts
+
+
 def session_cost(session_id, invocations=None):
     """USD cost of one session from its per-request token splits.
 
     invocations: ALL_INVOCATIONS-style rows (session_id, model, input_tokens,
-    output_tokens, cache_creation, cache_read, reasoning). Defaults to this
-    process's ALL_INVOCATIONS. Returns (total_usd, by_model, rows, unpriced):
-    by_model maps model -> {"requests", "cost_usd"}; rows carry each request's
-    own cost; unpriced lists requests whose model has no rate (cost $0, never
-    folded into another model's rate).
+    output_tokens, cache_creation, cache_read, reasoning, timestamp).
+    Defaults to this process's ALL_INVOCATIONS. Returns (total_usd, by_model,
+    rows, unpriced): by_model maps model -> {"requests", "cost_usd"}; rows
+    carry each request's own cost; unpriced lists requests whose model has no
+    rate (cost $0, never folded into another model's rate).
+
+    Each row is priced at the rate in force at THAT row's timestamp, via
+    model_bill(..., when=row timestamp) — a session spanning a published
+    price change bills its early rows at the old rate and its later rows at
+    the new rate, never all at today's rate. A row with no (or unparseable)
+    timestamp falls back to the flat table, i.e. today's rate.
     """
     rows = [r for r in (ALL_INVOCATIONS if invocations is None else invocations)
             if r.get("session_id") == session_id]
@@ -614,7 +647,7 @@ def session_cost(session_id, invocations=None):
             "output_tokens": r.get("output_tokens", 0),
             "reasoning_tokens": r.get("reasoning", 0),
         }
-        cost, src = model_bill(r.get("model", "unknown"), bucket)
+        cost, src = model_bill(r.get("model", "unknown"), bucket, when=_row_when(r))
         if cost is None:
             unpriced.append(r)
             continue

@@ -11,6 +11,7 @@ under one expensive model's rate).
 """
 import importlib.util
 import pathlib
+from datetime import datetime, timezone
 
 import pytest
 
@@ -30,8 +31,8 @@ SID = "sess-muse-test"
 
 
 def _row(model, input_tokens=0, cache_read=0, cache_creation=0,
-         output_tokens=0, reasoning=0, session_id=SID):
-    return {
+         output_tokens=0, reasoning=0, session_id=SID, timestamp=None):
+    row = {
         "session_id": session_id,
         "model": model,
         "input_tokens": input_tokens,
@@ -40,6 +41,13 @@ def _row(model, input_tokens=0, cache_read=0, cache_creation=0,
         "output_tokens": output_tokens,
         "reasoning": reasoning,
     }
+    if timestamp is not None:
+        row["timestamp"] = timestamp
+    return row
+
+
+def _utc(year, month, day, hour=12, minute=0):
+    return datetime(year, month, day, hour, minute, tzinfo=timezone.utc)
 
 
 def test_rate_card_standard_is_the_verified_list_price():
@@ -140,8 +148,7 @@ def test_unknown_models_fall_back_to_the_default_inside_a_session():
     assert len(rows) == 1 and unpriced == []
 
 
-def test_window_bounds_are_bounds_not_a_bill():
-    # This session's window: 223,638 tokens (session_status, 2026-11-25 ~01:49 EST).
+def test_window_bounds_are_bounds_not_a_bill():    # This session's window: 223,638 tokens (session_status, 2026-11-25 ~01:49 EST).
     # Exact values: 0.2795475 / 0.9504615 / 0.0335457 (floats; round() on the
     # output figure gives 0.950461, so compare with approx, not round()).
     b = tt.muse_window_bounds(223_638)
@@ -162,3 +169,87 @@ def test_window_assumption_split_matches_the_reference_math():
     assert round(total, 6) == 0.103992
     assert abs(total - 0.104) < 0.00001
     assert b["all_cached_input_usd"] <= total <= b["all_output_usd"]
+
+
+# --- Per-row era pricing (Codex P2, review 6053325778) -----------------------
+# session_cost used to ignore each row's timestamp and bill every row at
+# today's flat rate. A session spanning a published price change therefore
+# billed its history at the new rate. Each row is now priced at the rate in
+# force at that row's own timestamp.
+
+
+def test_session_spanning_a_price_change_bills_each_row_at_its_own_era():
+    # gemini-4-carbon doubles on 2026-12-01 (published, ai.google.dev):
+    #   before: input $2.00 / cache_read $0.10 per MTok
+    #   from 2026-12-01: input $4.00 / cache_read $0.20 per MTok
+    # Row A (2026-11-30): 1M fresh x 2.00 + 1M cached x 0.10 = $2.10.
+    # Row B (2026-12-01): 1M fresh x 4.00 + 1M cached x 0.20 = $4.20.
+    # Total $6.30 — NOT $8.40, which is what billing both rows at today's
+    # (post-change) rate would give. The cached split is era-priced too.
+    total, _by_model, rows, _unpriced = tt.session_cost(SID, [
+        _row("gemini-4-carbon", input_tokens=1_000_000, cache_read=1_000_000,
+             timestamp=_utc(2026, 11, 30)),
+        _row("gemini-4-carbon", input_tokens=1_000_000, cache_read=1_000_000,
+             timestamp=_utc(2026, 12, 1)),
+    ])
+    assert [r["cost_usd"] for r in rows] == [pytest.approx(2.10), pytest.approx(4.20)]
+    assert total == pytest.approx(6.30)
+    assert total != pytest.approx(8.40)
+
+
+def test_row_before_billing_start_bills_zero_codex_example():
+    # Codex's own example: a gpt-rosalind-research row dated 2026-10-01 with
+    # 1M input tokens returned $5 from session_cost, while
+    # model_bill(..., when=row['timestamp']) correctly returns $0 — the
+    # catalog starts billing on 2026-10-05. The same session on both sides
+    # of the start must bill $0 then $5.
+    total, _by_model, rows, _unpriced = tt.session_cost(SID, [
+        _row("gpt-rosalind-research", input_tokens=1_000_000,
+             timestamp=_utc(2026, 10, 1)),
+        _row("gpt-rosalind-research", input_tokens=1_000_000,
+             timestamp=_utc(2026, 10, 5)),
+    ])
+    assert [r["cost_usd"] for r in rows] == [pytest.approx(0.0), pytest.approx(5.0)]
+    assert total == pytest.approx(5.0)
+
+
+def test_row_exactly_on_a_price_change_boundary_uses_the_new_rate():
+    # Day-granular boundary: 2026-11-30 23:59 is still the old band,
+    # 2026-12-01 00:00 is the new band.
+    total, _by_model, rows, _unpriced = tt.session_cost(SID, [
+        _row("gemini-4-carbon", input_tokens=1_000_000,
+             timestamp=_utc(2026, 11, 30, 23, 59)),
+        _row("gemini-4-carbon", input_tokens=1_000_000,
+             timestamp=_utc(2026, 12, 1, 0, 0)),
+    ])
+    assert [r["cost_usd"] for r in rows] == [pytest.approx(2.0), pytest.approx(4.0)]
+    assert total == pytest.approx(6.0)
+
+
+def test_row_without_a_timestamp_falls_back_to_todays_flat_rate():
+    # Safe default, documented in session_cost: no timestamp means no era
+    # to choose, so the flat table (today's rate) answers — the old
+    # behaviour, kept for rows that predate timestamp capture.
+    total, _by_model, rows, _unpriced = tt.session_cost(SID, [
+        _row("gemini-4-carbon", input_tokens=1_000_000),
+    ])
+    assert total == pytest.approx(2.0)
+    assert rows[0]["cost_usd"] == pytest.approx(2.0)
+
+
+def test_string_and_epoch_timestamps_price_at_their_own_era():
+    # Hand-built rows may carry an ISO string or an epoch instead of the
+    # tz-aware datetime the parsers write. Both must resolve to the same
+    # era as the datetime form — the string's written date, the epoch's UTC
+    # date — not silently fall back to today's rate.
+    total, _by_model, rows, _unpriced = tt.session_cost(SID, [
+        _row("gemini-4-carbon", input_tokens=1_000_000,
+             timestamp="2026-11-30T10:00:00Z"),
+        _row("gemini-4-carbon", input_tokens=1_000_000,
+             timestamp=int(_utc(2026, 12, 1).timestamp())),
+        _row("gemini-4-carbon", input_tokens=1_000_000,
+             timestamp="not-a-date"),
+    ])
+    assert [r["cost_usd"] for r in rows] == [
+        pytest.approx(2.0), pytest.approx(4.0), pytest.approx(2.0)]
+    assert total == pytest.approx(8.0)
