@@ -38,11 +38,20 @@ export function createStore(db) {
   const run = (sql, ...args) => db.prepare(sql).bind(...args).run();
 
   return {
+    // Current and historical snapshots follow the snapshot_reads timeline, not first-fetch time.
     async latestSnapshot(source) {
-      return snapRow(await first('SELECT * FROM snapshots WHERE source = ? ORDER BY fetched_at DESC LIMIT 1', source));
+      return snapRow(await first(
+        `SELECT s.* FROM snapshot_reads r JOIN snapshots s ON s.snapshot_id = r.snapshot_id
+          WHERE r.source = ? ORDER BY r.from_at DESC, r.id DESC LIMIT 1`, source));
     },
     async snapshotAt(source, at) {
-      return snapRow(await first('SELECT * FROM snapshots WHERE source = ? AND fetched_at <= ? ORDER BY fetched_at DESC LIMIT 1', source, at));
+      return snapRow(await first(
+        `SELECT s.* FROM snapshot_reads r JOIN snapshots s ON s.snapshot_id = r.snapshot_id
+          WHERE r.source = ? AND r.from_at <= ? ORDER BY r.from_at DESC, r.id DESC LIMIT 1`, source, at));
+    },
+    // A second read of the same page confirms any price the delta guard held back.
+    async confirmSnapshot(snapshot_id, models, at) {
+      await run('UPDATE snapshots SET models_json = ?, last_seen_at = ? WHERE snapshot_id = ?', JSON.stringify(models), at, snapshot_id);
     },
     async earliestSnapshot(source) {
       return snapRow(await first('SELECT * FROM snapshots WHERE source = ? ORDER BY fetched_at ASC LIMIT 1', source));
@@ -54,10 +63,11 @@ export function createStore(db) {
       await run(
         `INSERT INTO snapshots (snapshot_id, source, source_url, page_url, fetched_at, last_seen_at, http_status, body_sha256, parser, models_json, rejected_json)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(snapshot_id) DO UPDATE SET last_seen_at = excluded.last_seen_at`,
+         ON CONFLICT(snapshot_id) DO UPDATE SET last_seen_at = excluded.last_seen_at, models_json = excluded.models_json`,
         s.snapshot_id, s.source, s.source_url, s.page_url, s.fetched_at, s.fetched_at, s.http_status, s.body_sha256, s.parser,
         JSON.stringify(s.models), JSON.stringify(s.rejected || []),
       );
+      await run('INSERT INTO snapshot_reads (source, snapshot_id, from_at) VALUES (?, ?, ?)', s.source, s.snapshot_id, s.fetched_at);
     },
     async saveFetchLog(s) {
       await run(
