@@ -131,7 +131,13 @@ export async function refreshAll(store, opts = {}) {
     if (snap.ok) {
       const previous = await store.latestSnapshot(source.id);
       if (previous && previous.body_sha256 === snap.body_sha256 && previous.parser === snap.parser) {
-        await store.touchSnapshot(previous.snapshot_id, snap.fetched_at);
+        const held = previous.models.some((m) => m.bands.some((b) => b.quarantined));
+        if (held) {
+          for (const m of previous.models) for (const b of m.bands) delete b.quarantined;
+          await store.confirmSnapshot(previous.snapshot_id, previous.models, snap.fetched_at);
+        } else {
+          await store.touchSnapshot(previous.snapshot_id, snap.fetched_at);
+        }
         results.push({ source: source.id, ok: true, changed: false, snapshot_id: previous.snapshot_id, models: previous.models.length });
       } else {
         applyDeltaGuard(snap, previous);
