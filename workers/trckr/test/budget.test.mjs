@@ -109,3 +109,12 @@ test('local watcher enforces with no cloud: ledger, signal files, and the gate t
   watch('close', 'local-1');
   assert.equal(gate('PreToolUse').trim(), '');
 });
+
+test('usage totals count a session rollup only when the session has no per-turn rows', async () => {
+  const { app, call } = await setup();
+  await call('/v1/budget', { session_id: 'mix', cap_usd: 50, usage: { ...OPUS, input_tokens: 1_000_000 } });
+  const total = async () => (await app.store.usage('nougen', { group_by: 'session', session_id: 'mix' }))[0].cost_usd;
+  assert.equal(await total(), 4, 'rollup alone counts');
+  await call('/v1/turns', [{ ...OPUS, request_id: 't1', session_id: 'mix', input_tokens: 250000 }]);
+  assert.equal(await total(), 1, 'per-turn rows replace the rollup in totals');
+});

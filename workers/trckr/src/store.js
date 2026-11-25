@@ -135,6 +135,8 @@ export function createStore(db) {
       if (until) where.push('at < ?'), args.push(until);
       if (session_id) where.push('session_id = ?'), args.push(session_id);
       if (lane) where.push('lane = ?'), args.push(lane);
+      // A session rollup (cumulative usage for budgets) counts only when the session has no per-turn rows.
+      where.push(`NOT ((status = 'session_rollup' OR request_id LIKE 'rollup:%') AND EXISTS (SELECT 1 FROM turns t2 WHERE t2.owner = turns.owner AND t2.session_id = turns.session_id AND t2.status != 'session_rollup' AND t2.request_id NOT LIKE 'rollup:%'))`);
       const rows = await all(
         `SELECT ${key} AS k, COUNT(*) AS turns,
            SUM(input_tokens) AS input, SUM(output_tokens) AS output, SUM(cache_read_tokens) AS cache_read,

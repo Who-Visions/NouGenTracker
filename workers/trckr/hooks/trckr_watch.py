@@ -19,7 +19,7 @@ Env:   TRCKR_URL (default https://trckr.nougenai.com), TRCKR_INGEST_KEY (Keymake
        TRCKR_HOME (default ~/.nougen/trckr), CLAUDE_PROJECTS (default ~/.claude/projects),
        TRCKR_ALERT_CMD (optional, run with the alert text as one argument when a session hits its cap).
 """
-import json, os, re, subprocess, sys, time, urllib.request
+import json, os, re, socket, subprocess, sys, time, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,6 +27,8 @@ HOME = Path(os.environ.get("TRCKR_HOME", Path.home() / ".nougen" / "trckr"))
 PROJECTS = Path(os.environ.get("CLAUDE_PROJECTS", Path.home() / ".claude" / "projects"))
 URL = os.environ.get("TRCKR_URL", "https://trckr.nougenai.com").rstrip("/")
 KEY = os.environ.get("TRCKR_INGEST_KEY")
+# Same lane as the Stop hook, so a request both upload is one row (Trckr dedupes on lane + request id).
+LANE = os.environ.get("TRCKR_LANE") or f"{socket.gethostname().split('.')[0].lower()}-claude-code"
 SCAN_DAYS = float(os.environ.get("TRCKR_SCAN_DAYS", "3"))
 PRICE_TTL = 6 * 3600
 FIELDS = (("input_tokens", "input"), ("output_tokens", "output"), ("cache_read_tokens", "cache_read"),
@@ -166,7 +168,7 @@ def push(sid, cap, reqs, sent):
     try:
         post("/v1/budget", {"session_id": sid, "cap_usd": cap["cap_usd"], "warn_pct": cap.get("warn_pct", 80),
                             "label": cap.get("label"), "stop_rule": cap.get("stop_rule")})
-        new = [dict(t, request_id=rid, session_id=sid, lane="local-watch", client="claude-code", provider="anthropic")
+        new = [dict(t, request_id=rid, session_id=sid, lane=LANE, client="claude-code", provider="anthropic")
                for rid, t in reqs.items() if rid not in sent]
         last = None
         for i in range(0, len(new), 200):

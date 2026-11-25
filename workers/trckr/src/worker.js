@@ -186,7 +186,7 @@ export function makeApp(env, deps = {}) {
 
   // Two crons: prices every 30 minutes, the model-free budget watcher every 5. No cron given (tests) runs both.
   async function scheduled(cron) {
-    const watch = () => budgets.watch({ alertUrl: env.TRCKR_ALERT_URL, alertToken: env.TRCKR_ALERT_TOKEN, fetchImpl: deps.alertFetch || deps.fetchImpl || fetch });
+    const watch = () => budgets.watch({ alertUrl: env.TRCKR_ALERT_URL, alertToken: env.TRCKR_ALERT_TOKEN, fetchImpl: deps.alertFetch || deps.fetchImpl || ((...a) => globalThis.fetch(...a)) });
     if (cron === '*/5 * * * *') return watch();
     const prices = await refreshAll(store, { fetchImpl: deps.fetchImpl });
     await watch();
