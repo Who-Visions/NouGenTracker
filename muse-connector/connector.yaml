@@ -1,0 +1,6 @@
+id: "custom.trckr-nougenai"
+title: "NouGen//Trckr"
+description: "Use NouGen//Trckr through its hosted MCP server: per-turn token and cost tracking with live provider price pools."
+include_in_prompt: true
+require_auth: true
+aliases: ["Trckr", "NouGen Trckr", "trckr.nougenai.com"]
