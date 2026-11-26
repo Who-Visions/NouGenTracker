@@ -1,0 +1,58 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-26",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 150620,
+    "input_tokens": 2821,
+    "output_tokens": 740,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 0,
+    "cache_read": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-26T06:52:40-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 6,
+  "machine": "blade1tb",
+  "models": {
+    "Gemini 4 Hydrogen (Low) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 150620,
+      "input_tokens": 2821,
+      "output_tokens": 740,
+      "reasoning": 0
+    }
+  },
+  "partial": true,
+  "provider_stats": {},
+  "schema": 3,
+  "sketch": [
+    "878651f367652794",
+    "a404dc86e6cffcfa",
+    "c049aa42355ed2a6",
+    "cfa87a6f900b9121",
+    "d89a80ea1df485e5",
+    "ee60ff2c5893dc8c"
+  ],
+  "sources": {
+    "Antigravity (Fallback)": {
+      "cache_creation": 0,
+      "cache_read": 150620,
+      "input_tokens": 2821,
+      "output_tokens": 740,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 0,
+    "cache_read": 150620,
+    "input_tokens": 2821,
+    "output_tokens": 740,
+    "reasoning": 0
+  }
+}
