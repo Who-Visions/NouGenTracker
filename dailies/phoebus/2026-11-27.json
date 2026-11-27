@@ -10,14 +10,14 @@
   },
   "exact": {
     "cache_creation": 0,
-    "cache_read": 69163392,
-    "input_tokens": 1006576,
-    "output_tokens": 48512,
-    "reasoning": 85427
+    "cache_read": 71910016,
+    "input_tokens": 1244726,
+    "output_tokens": 50913,
+    "reasoning": 90095
   },
-  "generated_at": "2026-11-27T06:53:55-05:00",
+  "generated_at": "2026-11-27T11:01:13-05:00",
   "generated_by": "claude-cli",
-  "invocations": 393,
+  "invocations": 406,
   "machine": "phoebus",
   "models": {
     "<synthetic>": {
@@ -29,10 +29,10 @@
     },
     "gpt-6-luna": {
       "cache_creation": 0,
-      "cache_read": 69163392,
-      "input_tokens": 1006576,
-      "output_tokens": 48512,
-      "reasoning": 85427
+      "cache_read": 71910016,
+      "input_tokens": 1244726,
+      "output_tokens": 50913,
+      "reasoning": 90095
     }
   },
   "partial": true,
@@ -48,7 +48,7 @@
       "uncached_input_tokens": 0
     },
     "OpenAI Codex": {
-      "cache_hit_ratio": 0.9857,
+      "cache_hit_ratio": 0.983,
       "distinct_sessions": 1,
       "peak_context_used_percent": 95.27,
       "plan_types": [
@@ -68,8 +68,8 @@
           "window_minutes": 10080
         }
       },
-      "total_tokens": 70691134,
-      "uncached_input_tokens": 1006576
+      "total_tokens": 73682977,
+      "uncached_input_tokens": 1244726
     }
   },
   "schema": 3,
@@ -94,6 +94,7 @@
     "0ac4d05edd97eef5",
     "0b3c493b8a5fd97f",
     "0b6d1130de9adaee",
+    "0bf9151db119124d",
     "0c04a0b5b39f8fd9",
     "0d1b15843306ee1f",
     "0d7367e1ed4d5bd3",
@@ -115,6 +116,7 @@
     "177980b1244842da",
     "17bcdeeb9bb365d8",
     "17de90db43998f91",
+    "1827dbdcd95f8e6c",
     "1828afb8b61eef27",
     "18b7128e4f4ec76a",
     "1901c5c2bd6e74d0",
@@ -135,9 +137,7 @@
     "24962af7567066ae",
     "24afe10fa7a8e87b",
     "24d2ec2054528ff2",
-    "253b0daf7ffba4b6",
-    "25ceb978d404c634",
-    "25f8b81a5801709c"
+    "253b0daf7ffba4b6"
   ],
   "sources": {
     "Claude Code": {
@@ -149,17 +149,17 @@
     },
     "OpenAI Codex": {
       "cache_creation": 0,
-      "cache_read": 69163392,
-      "input_tokens": 1006576,
-      "output_tokens": 48512,
-      "reasoning": 85427
+      "cache_read": 71910016,
+      "input_tokens": 1244726,
+      "output_tokens": 50913,
+      "reasoning": 90095
     }
   },
   "totals": {
     "cache_creation": 0,
-    "cache_read": 69163392,
-    "input_tokens": 1006576,
-    "output_tokens": 48512,
-    "reasoning": 85427
+    "cache_read": 71910016,
+    "input_tokens": 1244726,
+    "output_tokens": 50913,
+    "reasoning": 90095
   }
 }
