@@ -1595,6 +1595,27 @@ def _validated_day(when) -> str | None:
     past "2" sorted into the newest open-ended band and billed at the
     highest rate. Nothing unvalidated reaches a band compare anymore.
 
+    Guarantee (PR #51 follow-up, Jensen HOLE-FOUND): no overridable
+    method or property on `when` is ever trusted. The branch itself is
+    decided from `type(when)` + `issubclass`, never `isinstance`:
+    `isinstance` consults the instance's `__class__` attribute, so an
+    object with a hostile `__getattribute__` can make `isinstance`
+    itself raise. For `date`/`datetime` inputs (including subclasses)
+    the components are read through the base-class descriptors and
+    copied into a fresh, exact base-type `date`/`datetime`; all further
+    work (`astimezone`, `date`, `isoformat`) runs on that plain copy. A
+    subclass overriding `isoformat`, `date`, `astimezone`, `utcoffset`,
+    `tzinfo`, `year`/`month`/`day`, `__str__`, or `__new__` therefore
+    cannot move the billing day. Objects that only claim to be a date (a
+    lying `__class__`, e.g. `Mock(spec=date)`) fail the base descriptors
+    and are rejected (None). String inputs are likewise returned as a
+    plain `str` built from the validated parse, never the caller's
+    object: a `str` subclass overriding the comparison operators could
+    otherwise steer the band compare. The attached `tzinfo` object is,
+    by definition, authoritative for the offset of an aware datetime; if
+    UTC conversion raises (hostile tzinfo, or overflow at the year
+    1/9999 edge) the result is None, never an exception.
+
     - tz-aware datetimes are normalized to their UTC day first: a price
       change effective at UTC midnight must bill the same instant the same
       way regardless of the spelling's timezone (23:30 EST on 2026-11-30
@@ -1608,20 +1629,44 @@ def _validated_day(when) -> str | None:
     """
     if when is None:
         return None
-    if isinstance(when, datetime.datetime):
-        if when.tzinfo is not None:
-            when = when.astimezone(datetime.timezone.utc)
-        return when.date().isoformat()
-    if isinstance(when, datetime.date):
-        return when.isoformat()
-    if isinstance(when, str):
+    _wt = type(when)
+    if issubclass(_wt, datetime.datetime):
+        _dt = datetime.datetime
+        try:
+            plain = _dt(
+                _dt.year.__get__(when),
+                _dt.month.__get__(when),
+                _dt.day.__get__(when),
+                _dt.hour.__get__(when),
+                _dt.minute.__get__(when),
+                _dt.second.__get__(when),
+                _dt.microsecond.__get__(when),
+                tzinfo=_dt.tzinfo.__get__(when),
+                fold=_dt.fold.__get__(when),
+            )
+            if plain.tzinfo is not None:
+                plain = plain.astimezone(datetime.timezone.utc)
+            return plain.date().isoformat()
+        except Exception:
+            return None
+    if issubclass(_wt, datetime.date):
+        _d = datetime.date
+        try:
+            return _d(
+                _d.year.__get__(when),
+                _d.month.__get__(when),
+                _d.day.__get__(when),
+            ).isoformat()
+        except Exception:
+            return None
+    if issubclass(_wt, str):
         if not _DAY_RE.match(when):
             return None
         try:
-            datetime.date.fromisoformat(when)
+            parsed = datetime.date.fromisoformat(when)
         except ValueError:
             return None
-        return when
+        return parsed.isoformat()
     return None
 
 

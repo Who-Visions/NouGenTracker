@@ -457,3 +457,214 @@ def test_historical_cache_lookup_rejects_garbage_when(clean_resolver_state, tmp_
         "gemini-4-carbon", "not-a-date", cache_path=cache) is None
     assert pricing_live.resolve_historical_cache_price(
         "gemini-4-carbon", "2026-11-30", cache_path=cache) is not None
+
+
+# --- _validated_day: lying date/datetime subclasses (PR #51 HOLE-FOUND) ---
+# Jensen's re-verification proved _validated_day trusted when.isoformat() /
+# when.date().isoformat() without re-validating: a subclass claiming a
+# different day billed at the wrong era. The fix reads components through
+# the base-class descriptors into a plain date/datetime copy and never
+# calls an overridable method on `when`. Every test below fails on the
+# pre-fix code except test_validated_day_date_subclass_lying_components
+# (guard: the old C isoformat() already read the real fields).
+
+_VD_MODEL = "gemini-4-carbon"
+
+
+def _vd_lookup(when):
+    return pricing_live._lookup_price_schedule(_SCHED, _VD_MODEL, when)
+
+
+def _vd_assert_day(when, day):
+    """`when` must bill exactly like the honest plain date `day`."""
+    old = _vd_lookup(datetime.date(2026, 11, 30))
+    new = _vd_lookup(datetime.date(2026, 12, 1))
+    assert old != new  # sanity: the eras are distinguishable
+    assert pricing_live._validated_day(when) == day.isoformat()
+    assert _vd_lookup(when) == _vd_lookup(day)
+
+
+_VD_OLD = datetime.date(2026, 11, 30)
+_VD_NEW = datetime.date(2026, 12, 1)
+
+
+class _EvilDate(datetime.date):
+    def isoformat(self):
+        return "2026-12-01"
+
+
+class _EvilDatetime(datetime.datetime):
+    def date(self):
+        return _EvilDate(2026, 12, 1)
+
+
+def test_validated_day_date_subclass_lying_isoformat_bills_real_day():
+    # (a) fails pre-fix: isoformat() was trusted -> new era.
+    _vd_assert_day(_EvilDate(2026, 11, 30), _VD_OLD)
+
+
+def test_validated_day_datetime_subclass_lying_date_bills_real_day():
+    # (b) fails pre-fix: when.date() was trusted -> new era.
+    _vd_assert_day(_EvilDatetime(2026, 11, 30, 12, 0), _VD_OLD)
+
+
+def test_validated_day_date_subclass_lying_components_bills_real_day():
+    # (c) GUARD ONLY: expected to PASS pre-fix. Base date.isoformat() reads
+    # the internal fields, not the overridden properties, so the old code was
+    # not vulnerable to this shape. It pins the new code against regressing.
+    class LyingParts(datetime.date):
+        @property
+        def year(self):
+            return 2026
+
+        @property
+        def month(self):
+            return 12
+
+        @property
+        def day(self):
+            return 1
+
+    _vd_assert_day(LyingParts(2026, 11, 30), _VD_OLD)
+
+
+def test_validated_day_garbage_or_raising_isoformat_is_never_consulted():
+    # (d) Outcome: OLD ERA (the real day), not None. isoformat() is never
+    # called, so garbage or raising output cannot matter.
+    # Fails pre-fix: "garbage" / "2099-99-99" were returned verbatim, and
+    # the raising variant propagated RuntimeError.
+    class Garbage(datetime.date):
+        def isoformat(self):
+            return "garbage"
+
+    class Impossible(datetime.date):
+        def isoformat(self):
+            return "2099-99-99"
+
+    class Raising(datetime.date):
+        def isoformat(self):
+            raise RuntimeError("boom")
+
+    class RaisingDt(datetime.datetime):
+        def date(self):
+            raise RuntimeError("boom")
+
+        def isoformat(self, *a, **k):
+            raise RuntimeError("boom")
+
+    for cls in (Garbage, Impossible, Raising):
+        _vd_assert_day(cls(2026, 11, 30), _VD_OLD)
+    _vd_assert_day(RaisingDt(2026, 11, 30, 23, 59), _VD_OLD)
+
+
+def test_validated_day_tz_aware_evil_datetime_bills_true_utc_day():
+    # (e) fails pre-fix: when.astimezone() / .date() were trusted.
+    class LiesNew(datetime.datetime):
+        def isoformat(self, *a, **k):
+            return "2026-12-01T00:30:00+00:00"
+
+        def date(self):
+            return _EvilDate(2026, 12, 1)
+
+        def astimezone(self, tz=None):
+            return datetime.datetime(2026, 12, 1, 0, 30, tzinfo=datetime.timezone.utc)
+
+    class LiesOld(datetime.datetime):
+        def isoformat(self, *a, **k):
+            return "2026-11-30T23:30:00+00:00"
+
+        def date(self):
+            return datetime.date(2026, 11, 30)
+
+        def astimezone(self, tz=None):
+            return datetime.datetime(2026, 11, 30, 23, 30, tzinfo=datetime.timezone.utc)
+
+    plus2 = datetime.timezone(datetime.timedelta(hours=2))
+    minus2 = datetime.timezone(datetime.timedelta(hours=-2))
+    # Wall clock 12-01 00:30+02:00 is 11-30 22:30 UTC -> old era.
+    _vd_assert_day(LiesNew(2026, 12, 1, 0, 30, tzinfo=plus2), _VD_OLD)
+    # Wall clock 11-30 23:30-02:00 is 12-01 01:30 UTC -> new era
+    # (the lie tries to under-bill).
+    _vd_assert_day(LiesOld(2026, 11, 30, 23, 30, tzinfo=minus2), _VD_NEW)
+
+
+def test_validated_day_tz_aware_datetime_overriding_only_date_bills_utc_day():
+    # (e, variant) fails pre-fix on CPython >= 3.8: base astimezone() returns
+    # an instance of the subclass, whose evil date() was then trusted.
+    plus2 = datetime.timezone(datetime.timedelta(hours=2))
+    _vd_assert_day(_EvilDatetime(2026, 11, 30, 12, 0, tzinfo=plus2), _VD_OLD)
+
+
+def test_validated_day_tzinfo_property_lying_naive_still_uses_utc_day():
+    # (e, variant) fails pre-fix: when.tzinfo -> None skipped the UTC
+    # normalisation, so the wall-clock day 12-01 billed new era.
+    class FakeNaive(datetime.datetime):
+        @property
+        def tzinfo(self):
+            return None
+
+    plus2 = datetime.timezone(datetime.timedelta(hours=2))
+    _vd_assert_day(FakeNaive(2026, 12, 1, 0, 30, tzinfo=plus2), _VD_OLD)
+
+
+def test_validated_day_rejects_object_faking_class_as_date():
+    # Extra hole, same class: isinstance() honours a lying __class__ (this is
+    # how Mock(spec=date) works). Fails pre-fix: returned "2026-12-01".
+    class FakeDate:
+        __class__ = property(lambda self: datetime.date)
+
+        def isoformat(self):
+            return "2026-12-01"
+
+    class FakeDatetime:
+        __class__ = property(lambda self: datetime.datetime)
+        tzinfo = None
+
+        def date(self):
+            return datetime.date(2026, 12, 1)
+
+    assert pricing_live._validated_day(FakeDate()) is None
+    assert pricing_live._validated_day(FakeDatetime()) is None
+    new = _vd_lookup(_VD_NEW)
+    assert _vd_lookup(FakeDate()) != new
+    assert _vd_lookup(FakeDatetime()) != new
+
+
+def test_validated_day_str_subclass_lying_comparisons_bills_real_day():
+    # Extension beyond Jensen's hole, same trust class: _validated_day used
+    # to return the caller's str object itself, and a str subclass lying
+    # through __ge__/__le__/__gt__ could steer the band compare (verified:
+    # EvilStr3("2026-11-30") billed new era $4.00 pre-fix). The day is now
+    # rebuilt as a plain str from the validated parse.
+    class EvilStr(str):
+        def __ge__(self, other):
+            return True  # pass every lower bound
+
+        def __le__(self, other):
+            return False  # fail every upper bound
+
+        def __gt__(self, other):
+            return False  # pass the horizon check
+
+        def __lt__(self, other):
+            return True
+
+    evil = EvilStr("2026-11-30")
+    day = pricing_live._validated_day(evil)
+    assert day == "2026-11-30"
+    assert type(day) is str
+    _vd_assert_day(evil, _VD_OLD)
+
+
+def test_validated_day_hostile_getattribute_neither_moves_nor_crashes():
+    # Hostile-recheck finding: isinstance() itself consults the instance's
+    # __class__ attribute, so an object whose __getattribute__ raises for
+    # everything made the OLD code raise out of _validated_day. The branch
+    # is now decided from type(when) + issubclass, and the base descriptors
+    # read the real C fields, so the true day bills and nothing raises.
+    # Fails pre-fix with RuntimeError propagating out of _validated_day.
+    class RaisingGetAttr(datetime.date):
+        def __getattribute__(self, name):
+            raise RuntimeError("boom")
+
+    _vd_assert_day(RaisingGetAttr(2026, 11, 30), _VD_OLD)
