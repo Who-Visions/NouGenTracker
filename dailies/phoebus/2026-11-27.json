@@ -3,9 +3,9 @@
   "date": "2026-11-27",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 0,
-    "input_tokens": 0,
-    "output_tokens": 0,
+    "cache_read": 8495,
+    "input_tokens": 10925,
+    "output_tokens": 273,
     "reasoning": 0
   },
   "exact": {
@@ -15,9 +15,9 @@
     "output_tokens": 55433,
     "reasoning": 97806
   },
-  "generated_at": "2026-11-27T14:26:37-05:00",
+  "generated_at": "2026-11-27T18:36:47-05:00",
   "generated_by": "claude-cli",
-  "invocations": 435,
+  "invocations": 437,
   "machine": "phoebus",
   "models": {
     "<synthetic>": {
@@ -25,6 +25,13 @@
       "cache_read": 0,
       "input_tokens": 0,
       "output_tokens": 0,
+      "reasoning": 0
+    },
+    "Gemini 4 Neon (Low) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 8495,
+      "input_tokens": 10925,
+      "output_tokens": 273,
       "reasoning": 0
     },
     "gpt-6-luna": {
@@ -140,6 +147,13 @@
     "231553dcc47b563a"
   ],
   "sources": {
+    "Antigravity (Fallback)": {
+      "cache_creation": 0,
+      "cache_read": 8495,
+      "input_tokens": 10925,
+      "output_tokens": 273,
+      "reasoning": 0
+    },
     "Claude Code": {
       "cache_creation": 0,
       "cache_read": 0,
@@ -157,9 +171,9 @@
   },
   "totals": {
     "cache_creation": 0,
-    "cache_read": 75758592,
-    "input_tokens": 1828698,
-    "output_tokens": 55433,
+    "cache_read": 75767087,
+    "input_tokens": 1839623,
+    "output_tokens": 55706,
     "reasoning": 97806
   }
 }
