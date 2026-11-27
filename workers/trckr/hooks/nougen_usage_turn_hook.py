@@ -307,8 +307,8 @@ def main() -> int:
     _save_state(state)
 
     trckr_status = _record_turn_trckr(conv_id, turn_num, deltas_by_model, d_in, d_out)
-    turn_cost = _cost_usd(d_in, d_out)
-    sess_cost = _cost_usd(in_tok, out_tok)
+    turn_cost = _cost_usd(d_in, d_out, d_cr)
+    sess_cost = _cost_usd(in_tok, out_tok, cr_tok)
     daily = _today_daily_summary()
 
     msg = (
