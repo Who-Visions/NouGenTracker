@@ -24,3 +24,8 @@ tracker_config.json
 readouts/
 logs/
 !.env.example
+
+# Muse connector runtime state (PR #48): per-turn context sizes and ledger
+# ids are mutable, session-local state — the committed dav1d-turns.json is
+# a schema/example file only.
+muse-connector/state/
