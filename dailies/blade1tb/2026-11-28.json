@@ -1,0 +1,56 @@
+{
+  "counter": "cfae0dd41682",
+  "date": "2026-11-28",
+  "estimated": {
+    "cache_creation": 0,
+    "cache_read": 43227,
+    "input_tokens": 4346,
+    "output_tokens": 1213,
+    "reasoning": 0
+  },
+  "exact": {
+    "cache_creation": 0,
+    "cache_read": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning": 0
+  },
+  "generated_at": "2026-11-28T02:48:52-05:00",
+  "generated_by": "claude-cli",
+  "invocations": 4,
+  "machine": "blade1tb",
+  "models": {
+    "Gemini 4 Neon (Low) (estimated)": {
+      "cache_creation": 0,
+      "cache_read": 43227,
+      "input_tokens": 4346,
+      "output_tokens": 1213,
+      "reasoning": 0
+    }
+  },
+  "partial": true,
+  "provider_stats": {},
+  "schema": 3,
+  "sketch": [
+    "5480c4e8477f94d3",
+    "845ecc4b7474f12e",
+    "8e9b6bc93fa00943",
+    "e23be2cd6df0977c"
+  ],
+  "sources": {
+    "Antigravity (Fallback)": {
+      "cache_creation": 0,
+      "cache_read": 43227,
+      "input_tokens": 4346,
+      "output_tokens": 1213,
+      "reasoning": 0
+    }
+  },
+  "totals": {
+    "cache_creation": 0,
+    "cache_read": 43227,
+    "input_tokens": 4346,
+    "output_tokens": 1213,
+    "reasoning": 0
+  }
+}

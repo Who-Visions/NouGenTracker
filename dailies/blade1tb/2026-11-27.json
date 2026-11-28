@@ -3,8 +3,8 @@
   "date": "2026-11-27",
   "estimated": {
     "cache_creation": 0,
-    "cache_read": 345727,
-    "input_tokens": 17969,
+    "cache_read": 261339,
+    "input_tokens": 23963,
     "output_tokens": 4271,
     "reasoning": 0
   },
@@ -15,15 +15,15 @@
     "output_tokens": 0,
     "reasoning": 0
   },
-  "generated_at": "2026-11-27T22:52:03-05:00",
+  "generated_at": "2026-11-28T02:48:52-05:00",
   "generated_by": "claude-cli",
   "invocations": 25,
   "machine": "blade1tb",
   "models": {
     "Gemini 4 Hydrogen (Low) (estimated)": {
       "cache_creation": 0,
-      "cache_read": 331304,
-      "input_tokens": 9745,
+      "cache_read": 246916,
+      "input_tokens": 15739,
       "output_tokens": 3615,
       "reasoning": 0
     },
@@ -35,49 +35,49 @@
       "reasoning": 0
     }
   },
-  "partial": true,
+  "partial": false,
   "provider_stats": {},
   "schema": 3,
   "sketch": [
     "020503df6fc29758",
-    "024f2c9b50a6e2be",
-    "0a218e4069cb2623",
-    "1aade186779c5218",
-    "2772a689ee98a80e",
-    "3bc9b07788f6dbc9",
-    "3c1b61803ca4e9ad",
-    "49ca688abb7e2459",
+    "02cd5417812e952a",
+    "0500205ffb4c2307",
+    "093500455422a177",
+    "09c0f4420955e3aa",
+    "12b979fd69c65028",
+    "228ceaba466f94ff",
+    "2487f1b517a42bee",
+    "2bb6e4d687a1468d",
+    "33f0058980f38587",
+    "36626fd75c5cf7bc",
+    "4ad9524c9147e36d",
     "5637d5db99bbc109",
     "570a70b5e14a061c",
-    "5be49400051e7f21",
-    "5de6baa53930c3cd",
-    "5f44620b97a4d79e",
-    "61e2a3c531e3e052",
-    "644e8e58ae02aaa5",
-    "6e1744fd8ee0c9a8",
-    "75dca3ea0ebcca8f",
-    "780147b89a249e0d",
-    "8f9816b021f8360c",
-    "917009e057ac9712",
-    "980e3135e6c31761",
-    "9c017b29aadc4213",
-    "9e206e3a3f84cefc",
-    "a4754cd34ce35ae3",
-    "d02852936382b1a7"
+    "5f4f83411cdb56c0",
+    "7ec3458bdd752c82",
+    "8161629d90f33cc4",
+    "8a6395ee54f55e63",
+    "a185fe12d5d161ac",
+    "a74b18ded11cd542",
+    "c49c3dea4fe7b339",
+    "e39383b00026f3e8",
+    "e87d02c5f031a456",
+    "ea0102fb4a678c66",
+    "fe33dfc1ca822a81"
   ],
   "sources": {
     "Antigravity (Fallback)": {
       "cache_creation": 0,
-      "cache_read": 345727,
-      "input_tokens": 17969,
+      "cache_read": 261339,
+      "input_tokens": 23963,
       "output_tokens": 4271,
       "reasoning": 0
     }
   },
   "totals": {
     "cache_creation": 0,
-    "cache_read": 345727,
-    "input_tokens": 17969,
+    "cache_read": 261339,
+    "input_tokens": 23963,
     "output_tokens": 4271,
     "reasoning": 0
   }
